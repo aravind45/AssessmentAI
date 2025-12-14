@@ -632,7 +632,7 @@ const Results = () => {
                 <li>Inconsistencies are normal and may reflect context-dependent behavior</li>
                 <li>Consider retaking if you feel results don't reflect your true preferences</li>
                 <li>Use results as a starting point for self-reflection</li>
-                <li>Discuss findings with mentors or career counselors</li>
+                <li>Discuss findings with mentors or advisors</li>
               </ul>
             </div>
           </div>
@@ -645,9 +645,9 @@ const Results = () => {
           }}>
             {score >= 80 ? (
               <div style={{ padding: '16px', background: '#e8f5e8', borderRadius: '8px' }}>
-                <h3 style={{ color: '#137333', marginBottom: '8px' }}>Great Job! 🎉</h3>
+                <h3 style={{ color: '#137333', marginBottom: '8px' }}>Excellent Work! 🎉</h3>
                 <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-                  You're well-prepared for this type of interview. Consider practicing more advanced topics 
+                  You have a strong understanding of this subject. Consider practicing more advanced topics 
                   or exploring related areas to further strengthen your skills.
                 </p>
               </div>

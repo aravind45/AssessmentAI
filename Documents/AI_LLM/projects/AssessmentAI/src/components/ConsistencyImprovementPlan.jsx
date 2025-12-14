@@ -29,9 +29,9 @@ const ConsistencyImprovementPlan = ({ consistencyScore, inconsistencies }) => {
         description: 'Reflect on your true preferences in areas where you gave contradictory answers.',
         timeframe: '15-30 minutes',
         tips: [
-          'Think about specific work situations for each trait',
+          'Think about specific situations for each trait',
           'Consider if your behavior changes based on context',
-          'Ask trusted colleagues for feedback on your work style',
+          'Ask trusted friends or peers for feedback on your style',
           'Journal about your preferences in different scenarios'
         ]
       })
@@ -57,13 +57,13 @@ const ConsistencyImprovementPlan = ({ consistencyScore, inconsistencies }) => {
       priority: 'low',
       icon: <CheckCircle size={20} />,
       title: 'Validation Strategy',
-      description: 'Use multiple assessment methods to get a complete picture of your work style.',
+      description: 'Use multiple assessment methods to get a complete picture of your behavioral style.',
       timeframe: 'Over time',
       tips: [
         'Take assessments from different providers',
-        'Ask for 360-degree feedback from colleagues',
-        'Use behavioral observation in real work situations',
-        'Consider professional career counseling'
+        'Ask for 360-degree feedback from peers',
+        'Use behavioral observation in real situations',
+        'Consider professional counseling or coaching'
       ]
     })
 

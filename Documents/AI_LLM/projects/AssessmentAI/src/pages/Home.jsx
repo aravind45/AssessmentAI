@@ -46,8 +46,8 @@ const Home = () => {
   const assessmentTypes = [
     {
       id: 'coding',
-      title: 'Coding Assessment',
-      description: 'Programming skills with algorithmic problems',
+      title: 'Programming Skills',
+      description: 'Test your coding abilities with algorithmic problems',
       icon: <Code size={48} />,
       color: '#4285f4',
       baseDuration: 3, // minutes per question
@@ -56,7 +56,7 @@ const Home = () => {
     {
       id: 'system-design',
       title: 'System Design',
-      description: 'Design scalable systems and architecture',
+      description: 'Learn to design scalable systems and architecture',
       icon: <Database size={48} />,
       color: '#34a853',
       baseDuration: 5,
@@ -65,7 +65,7 @@ const Home = () => {
     {
       id: 'frontend',
       title: 'Frontend Development',
-      description: 'HTML, CSS, JavaScript, and React challenges',
+      description: 'Master HTML, CSS, JavaScript, and React concepts',
       icon: <Globe size={48} />,
       color: '#fbbc04',
       baseDuration: 3,
@@ -73,7 +73,7 @@ const Home = () => {
     },
     {
       id: 'behavioral',
-      title: 'Behavioral Interview',
+      title: 'Behavioral Assessment',
       description: 'Leadership, teamwork, and problem-solving scenarios',
       icon: <Users size={48} />,
       color: '#ea4335',
@@ -91,8 +91,8 @@ const Home = () => {
     },
     {
       id: 'ai-business-analyst',
-      title: 'AI Business Analyst',
-      description: 'Assessment for AI Trainer/Business Analyst roles',
+      title: 'AI Business Analysis',
+      description: 'AI training, data quality, and business analysis skills',
       icon: <Brain size={48} />,
       color: '#673ab7',
       baseDuration: 5,
@@ -100,8 +100,8 @@ const Home = () => {
     },
     {
       id: 'ai-solution-architect',
-      title: 'AI Solution Architect',
-      description: 'Principal-level AI platform architecture assessment',
+      title: 'AI Solution Architecture',
+      description: 'Advanced AI platform architecture and design patterns',
       icon: <Layers size={48} />,
       color: '#3f51b5',
       baseDuration: 5,
@@ -172,7 +172,7 @@ const Home = () => {
           color: '#202124',
           marginBottom: '16px'
         }}>
-          Prepare for Your Dream Job
+          Master Your Skills with Assessments
         </h1>
         <p style={{ 
           fontSize: '20px', 
@@ -180,8 +180,8 @@ const Home = () => {
           maxWidth: '600px',
           margin: '0 auto'
         }}>
-          Practice with Google-style assessments and get ready for technical interviews 
-          at top tech companies.
+          Practice with comprehensive assessments and improve your knowledge 
+          across various subjects and skills.
         </p>
       </div>
 
@@ -256,7 +256,7 @@ const Home = () => {
             </div>
             <h3>Choose Assessment</h3>
             <p style={{ color: '#5f6368' }}>
-              Select the type of assessment that matches your target role
+              Select the type of assessment that matches your learning goals
             </p>
           </div>
           <div>

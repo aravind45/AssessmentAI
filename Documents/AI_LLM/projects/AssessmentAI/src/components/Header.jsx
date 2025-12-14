@@ -28,7 +28,7 @@ const Header = () => {
             }}
           >
             <Brain size={32} color="#4285f4" />
-            Job Assessment Platform
+            Assessment Platform
           </Link>
           
           <div style={{ display: 'flex', gap: '16px' }}>

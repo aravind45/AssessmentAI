@@ -263,7 +263,7 @@ export const questionBank = {
       id: 1,
       title: "Handling Disagreement",
       difficulty: "Medium",
-      description: "Tell me about a time when you disagreed with a team member's technical approach.",
+      description: "Describe a time when you disagreed with someone's approach to solving a problem.",
       type: "text",
       sampleAnswer: "Focus on: 1) Listening to understand, 2) Presenting data-driven viewpoint, 3) Finding compromise, 4) Positive outcome.",
       evaluationCriteria: [
@@ -277,7 +277,7 @@ export const questionBank = {
       id: 2,
       title: "Learning from Failure",
       difficulty: "Medium",
-      description: "Describe a project that didn't go as planned. What did you learn?",
+      description: "Describe a situation that didn't go as planned. What did you learn?",
       type: "text",
       sampleAnswer: "Use STAR method: Situation, Task, Action, Result. Focus on growth mindset and improvements.",
       evaluationCriteria: [
@@ -654,13 +654,13 @@ export const questionBank = {
       options: [
         "Start cleaning data immediately",
         "Create systematic data quality assessment",
-        "Consult ML team about thresholds",
+        "Consult technical team about thresholds",
         "Focus on largest issue first"
       ],
       correctAnswer: 1,
       explanation: "Systematic analysis ensures comprehensive quality management."
     }
-    // Continue with 49 more AI business analyst questions...
+    // Continue with more AI business analysis questions...
   ],
 
   "ai-solution-architect": [

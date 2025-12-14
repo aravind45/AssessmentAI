@@ -13,13 +13,13 @@ const QuestionManagerPage = () => {
   const [selectedQuestions, setSelectedQuestions] = useState(new Set())
 
   const assessmentTypes = [
-    { id: 'coding', name: 'Coding Assessment' },
+    { id: 'coding', name: 'Programming Skills' },
     { id: 'system-design', name: 'System Design' },
     { id: 'frontend', name: 'Frontend Development' },
-    { id: 'behavioral', name: 'Behavioral Interview' },
+    { id: 'behavioral', name: 'Behavioral Assessment' },
     { id: 'personality', name: 'Personality Assessment' },
-    { id: 'ai-business-analyst', name: 'AI Business Analyst' },
-    { id: 'ai-solution-architect', name: 'AI Solution Architect' },
+    { id: 'ai-business-analyst', name: 'AI Business Analysis' },
+    { id: 'ai-solution-architect', name: 'AI Solution Architecture' },
     { id: 'microservices', name: 'Microservices Architecture' },
     { id: 'event-driven-architecture', name: 'Event-Driven Architecture' },
     { id: 'serverless-architecture', name: 'Serverless Architecture' },
@@ -323,7 +323,7 @@ const QuestionManagerPage = () => {
 
           {selectedAssessment === 'behavioral' && (
             <div>
-              <h3 style={{ color: '#ea4335', marginBottom: '12px' }}>Behavioral Interview Format</h3>
+              <h3 style={{ color: '#ea4335', marginBottom: '12px' }}>Behavioral Assessment Format</h3>
               <div style={{ 
                 background: '#f8f9fa', 
                 padding: '16px', 
@@ -351,7 +351,7 @@ const QuestionManagerPage = () => {
                       <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>1</td>
                       <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Handling Conflict</td>
                       <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Medium</td>
-                      <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Tell me about a time you had to resolve a conflict with a colleague</td>
+                      <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Describe a time you had to resolve a conflict with someone</td>
                       <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>text</td>
                       <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Use STAR method: Situation, Task, Action, Result</td>
                       <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Shows empathy and listening</td>
@@ -367,7 +367,7 @@ const QuestionManagerPage = () => {
                   <li><strong>id:</strong> Unique number for each question</li>
                   <li><strong>title:</strong> Short title for the question</li>
                   <li><strong>difficulty:</strong> Easy, Medium, or Hard</li>
-                  <li><strong>description:</strong> The actual behavioral question</li>
+                  <li><strong>description:</strong> The behavioral scenario or question</li>
                   <li><strong>type:</strong> Always use "text" for behavioral questions</li>
                   <li><strong>sampleAnswer:</strong> Guidance on how to structure a good answer</li>
                   <li><strong>criteria1-4:</strong> Evaluation criteria (you can use up to 4 criteria columns)</li>

@@ -1,13 +1,11 @@
 {
-  "name": "job-assessment-app",
-  "version": "1.0.0",
-  "description": "A job seeker assessment application with Google-style technical questions",
-  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "lucide-react": "^0.263.1",
@@ -23,5 +21,6 @@
     "gh-pages": "^6.3.0",
     "vite": "^4.3.2",
     "vitest": "^0.31.0"
-  }
+  },
+  "homepage": "https://aravind45.github.io/AssessmentAI"
 }

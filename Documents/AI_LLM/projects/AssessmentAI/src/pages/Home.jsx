@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Code, Database, Globe, Users, Brain, Layers } from 'lucide-react'
+import { Code, Database, Globe, Users, Brain, Layers, Zap } from 'lucide-react'
 import { questionManager } from '../utils/questionManager'
 
 const Home = () => {
@@ -101,6 +101,51 @@ const Home = () => {
       color: '#3f51b5',
       baseDuration: 5,
       baseQuestions: 1
+    },
+    {
+      id: 'microservices',
+      title: 'Microservices Architecture',
+      description: 'Service decomposition, communication, and distributed systems',
+      icon: <Layers size={48} />,
+      color: '#00bcd4',
+      baseDuration: 4,
+      baseQuestions: 10
+    },
+    {
+      id: 'event-driven-architecture',
+      title: 'Event-Driven Architecture',
+      description: 'Event sourcing, CQRS, sagas, and event streaming',
+      icon: <Database size={48} />,
+      color: '#ff5722',
+      baseDuration: 4,
+      baseQuestions: 10
+    },
+    {
+      id: 'serverless-architecture',
+      title: 'Serverless Architecture',
+      description: 'Functions, event triggers, and serverless patterns',
+      icon: <Globe size={48} />,
+      color: '#795548',
+      baseDuration: 3,
+      baseQuestions: 10
+    },
+    {
+      id: 'full-stack-development',
+      title: 'Full-Stack Development',
+      description: 'End-to-end application development and architecture',
+      icon: <Code size={48} />,
+      color: '#607d8b',
+      baseDuration: 3,
+      baseQuestions: 10
+    },
+    {
+      id: 'ap-physics-10th',
+      title: 'AP Physics (10th Grade)',
+      description: 'Mechanics, electricity, magnetism, waves, and thermodynamics',
+      icon: <Zap size={48} />,
+      color: '#e91e63',
+      baseDuration: 2,
+      baseQuestions: 20
     }
   ].map(assessment => {
     const actualQuestions = questionCounts[assessment.id] || assessment.baseQuestions

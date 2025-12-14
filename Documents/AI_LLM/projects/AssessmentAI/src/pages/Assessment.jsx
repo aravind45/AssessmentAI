@@ -22,7 +22,12 @@ const Assessment = () => {
       behavioral: 5, // 5 minutes per behavioral question
       personality: 0.5, // 30 seconds per personality question
       'ai-business-analyst': 5, // 5 minutes per AI business analyst question
-      'ai-solution-architect': 5 // 5 minutes per AI solution architect question
+      'ai-solution-architect': 5, // 5 minutes per AI solution architect question
+      microservices: 4, // 4 minutes per microservices question
+      'event-driven-architecture': 4, // 4 minutes per event-driven question
+      'serverless-architecture': 3, // 3 minutes per serverless question
+      'full-stack-development': 3, // 3 minutes per full-stack question
+      'ap-physics-10th': 2 // 2 minutes per physics question
     }
     
     const minutesPerQuestion = timePerQuestion[assessmentType] || 3

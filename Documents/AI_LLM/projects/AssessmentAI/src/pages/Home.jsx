@@ -10,7 +10,12 @@ const Home = () => {
     // Get actual question counts including custom questions
     const updateCounts = () => {
       const counts = {}
-      const types = ['coding', 'system-design', 'frontend', 'behavioral', 'personality', 'ai-business-analyst', 'ai-solution-architect']
+      const types = [
+        'coding', 'system-design', 'frontend', 'behavioral', 'personality', 
+        'ai-business-analyst', 'ai-solution-architect', 'microservices', 
+        'event-driven-architecture', 'serverless-architecture', 
+        'full-stack-development', 'ap-physics-10th'
+      ]
       
       types.forEach(type => {
         const stats = questionManager.getQuestionStats(type)

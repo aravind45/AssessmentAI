@@ -19,7 +19,12 @@ const QuestionManagerPage = () => {
     { id: 'behavioral', name: 'Behavioral Interview' },
     { id: 'personality', name: 'Personality Assessment' },
     { id: 'ai-business-analyst', name: 'AI Business Analyst' },
-    { id: 'ai-solution-architect', name: 'AI Solution Architect' }
+    { id: 'ai-solution-architect', name: 'AI Solution Architect' },
+    { id: 'microservices', name: 'Microservices Architecture' },
+    { id: 'event-driven-architecture', name: 'Event-Driven Architecture' },
+    { id: 'serverless-architecture', name: 'Serverless Architecture' },
+    { id: 'full-stack-development', name: 'Full-Stack Development' },
+    { id: 'ap-physics-10th', name: 'AP Physics (10th Grade)' }
   ]
 
   useEffect(() => {

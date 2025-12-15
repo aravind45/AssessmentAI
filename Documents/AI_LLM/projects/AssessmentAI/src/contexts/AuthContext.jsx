@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { config } from '../config/environment'
 
 const AuthContext = createContext({})
 
@@ -40,6 +41,9 @@ export const AuthProvider = ({ children }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: config.redirectUrls.emailConfirmation
+      }
     })
     return { data, error }
   }
@@ -59,7 +63,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: config.redirectUrls.passwordReset,
     })
     return { data, error }
   }

@@ -41,11 +41,8 @@ const Register = () => {
       if (error) {
         setError(error.message)
       } else {
-        setSuccess('Registration successful! Please check your email to verify your account.')
-        // Optionally redirect after a delay
-        setTimeout(() => {
-          navigate('/login')
-        }, 3000)
+        setSuccess('Registration successful! Please check your email and click the confirmation link to activate your account.')
+        // Don't auto-redirect, let user read the message
       }
     } catch (err) {
       setError('An unexpected error occurred')

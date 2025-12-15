@@ -48,262 +48,139 @@ const Home = () => {
   return (
     <div style={{ 
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f6d55c 0%, #f093fb 100%)',
-      position: 'relative',
-      overflow: 'hidden'
+      background: 'white',
+      paddingTop: '80px'
     }}>
-      {/* Background decorative elements */}
-      <div style={{
-        position: 'absolute',
-        top: '10%',
-        right: '10%',
-        width: '200px',
-        height: '200px',
-        borderRadius: '50%',
-        background: 'rgba(255, 255, 255, 0.1)',
-        filter: 'blur(40px)'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '20%',
-        left: '5%',
-        width: '150px',
-        height: '150px',
-        borderRadius: '50%',
-        background: 'rgba(255, 255, 255, 0.08)',
-        filter: 'blur(30px)'
-      }} />
-
       <div className="container" style={{ 
-        padding: '60px 20px',
-        position: 'relative',
-        zIndex: 1
+        padding: '40px 20px'
       }}>
         {/* Hero Section */}
         <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '60px',
-          alignItems: 'center',
-          marginBottom: '80px',
-          minHeight: '70vh'
+          textAlign: 'center',
+          marginBottom: '60px'
         }}>
-          {/* Left Content */}
-          <div>
-            <h1 style={{ 
-              fontSize: '56px', 
-              fontWeight: '700', 
-              color: 'white',
-              marginBottom: '24px',
-              lineHeight: '1.1'
-            }}>
-              Turn <span style={{ color: '#ff8a65' }}>Excel sheets</span> into
-              <br />
-              <span style={{ color: '#4db6ac' }}>assessments</span> in seconds
-            </h1>
-            
+          <h1 style={{ 
+            fontSize: '48px', 
+            fontWeight: '700', 
+            color: '#333',
+            marginBottom: '24px',
+            lineHeight: '1.1'
+          }}>
+            Turn <span style={{ color: '#f6d55c' }}>Excel sheets</span> into
+            <br />
+            <span style={{ color: '#4db6ac' }}>assessments</span> in seconds
+          </h1>
+          
+          <p style={{ 
+            fontSize: '20px', 
+            color: '#666',
+            marginBottom: '40px',
+            lineHeight: '1.6',
+            maxWidth: '600px',
+            margin: '0 auto 40px auto'
+          }}>
+            Upload your Excel files with questions and answers to create personalized assessments with detailed explanations
+          </p>
+
+          {/* Upload Area */}
+          <div style={{
+            background: '#f8f9fa',
+            border: '2px dashed #dee2e6',
+            borderRadius: '16px',
+            padding: '40px',
+            textAlign: 'center',
+            marginBottom: '40px',
+            maxWidth: '500px',
+            margin: '0 auto 40px auto',
+            transition: 'all 0.3s ease'
+          }}>
+            <Upload size={48} color="#6c757d" style={{ marginBottom: '16px' }} />
             <p style={{ 
-              fontSize: '20px', 
-              color: 'rgba(255, 255, 255, 0.8)',
-              marginBottom: '40px',
-              lineHeight: '1.6'
+              color: '#495057', 
+              fontSize: '18px',
+              marginBottom: '16px'
             }}>
-              Upload your Excel files with questions and answers to create personalized assessments with detailed explanations
+              Drag and drop an Excel file (.xlsx or .xls)
             </p>
-
-            {/* Upload Area */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              border: '2px dashed rgba(255, 255, 255, 0.3)',
-              borderRadius: '16px',
-              padding: '40px',
-              textAlign: 'center',
-              marginBottom: '32px',
-              transition: 'all 0.3s ease'
+            <Link 
+              to="/questions"
+              className="btn btn-primary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#f6d55c',
+                color: '#333',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontSize: '16px',
+                fontWeight: '500',
+                border: 'none'
+              }}
+            >
+              Select Excel file
+            </Link>
+            <p style={{ 
+              color: '#6c757d', 
+              fontSize: '14px',
+              marginTop: '12px'
             }}>
-              <Upload size={48} color="white" style={{ marginBottom: '16px' }} />
-              <p style={{ 
-                color: 'white', 
-                fontSize: '18px',
-                marginBottom: '16px'
-              }}>
-                Drag and drop an Excel file (.xlsx or .xls)
-              </p>
-              <Link 
-                to="/questions"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  fontSize: '16px',
-                  fontWeight: '500',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(255, 255, 255, 0.3)'
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(255, 255, 255, 0.2)'
-                }}
-              >
-                Select Excel file
-              </Link>
-              <p style={{ 
-                color: 'rgba(255, 255, 255, 0.6)', 
-                fontSize: '14px',
-                marginTop: '12px'
-              }}>
-                Excel files up to 10MB • .xlsx and .xls formats supported
-              </p>
-            </div>
-
-            {/* Quick Stats */}
-            <div style={{
-              display: 'flex',
-              gap: '32px',
-              alignItems: 'center'
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ 
-                  fontSize: '32px', 
-                  fontWeight: '700', 
-                  color: '#4db6ac' 
-                }}>
-                  {totalQuestions || '150+'}
-                </div>
-                <div style={{ 
-                  fontSize: '14px', 
-                  color: 'rgba(255, 255, 255, 0.7)' 
-                }}>
-                  Questions Available
-                </div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ 
-                  fontSize: '32px', 
-                  fontWeight: '700', 
-                  color: '#ff8a65' 
-                }}>
-                  12
-                </div>
-                <div style={{ 
-                  fontSize: '14px', 
-                  color: 'rgba(255, 255, 255, 0.7)' 
-                }}>
-                  Assessment Types
-                </div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ 
-                  fontSize: '32px', 
-                  fontWeight: '700', 
-                  color: '#ffb74d' 
-                }}>
-                  Excel
-                </div>
-                <div style={{ 
-                  fontSize: '14px', 
-                  color: 'rgba(255, 255, 255, 0.7)' 
-                }}>
-                  Based
-                </div>
-              </div>
-            </div>
+              Excel files up to 10MB • .xlsx and .xls formats supported
+            </p>
           </div>
 
-          {/* Right Illustration */}
-          <div style={{ 
-            position: 'relative',
+          {/* Quick Stats */}
+          <div style={{
             display: 'flex',
+            gap: '40px',
+            alignItems: 'center',
             justifyContent: 'center',
-            alignItems: 'center'
+            flexWrap: 'wrap'
           }}>
-            {/* Main illustration container */}
-            <div style={{
-              width: '400px',
-              height: '400px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
-            }}>
-              {/* Person silhouette */}
-              <div style={{
-                width: '120px',
-                height: '120px',
-                background: 'linear-gradient(135deg, #f6d55c 0%, #f093fb 100%)',
-                borderRadius: '50%',
-                marginBottom: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                fontSize: '32px', 
+                fontWeight: '700', 
+                color: '#4db6ac' 
               }}>
-                <FileText size={60} color="white" />
+                {totalQuestions || '150+'}
               </div>
-
-              {/* Floating elements */}
-              <div style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                background: 'rgba(255, 138, 101, 0.9)',
-                borderRadius: '12px',
-                padding: '8px 12px',
-                color: 'white',
-                fontSize: '12px',
-                fontWeight: '600'
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#6c757d' 
               }}>
-                Assessment Ready!
+                Questions Available
               </div>
-
-              <div style={{
-                position: 'absolute',
-                bottom: '20px',
-                left: '20px',
-                background: 'rgba(77, 182, 172, 0.9)',
-                borderRadius: '12px',
-                padding: '8px 12px',
-                color: 'white',
-                fontSize: '12px',
-                fontWeight: '600'
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                fontSize: '32px', 
+                fontWeight: '700', 
+                color: '#ff8a65' 
               }}>
-                Excel Processed
+                12
               </div>
-
-              {/* Document icons */}
-              <div style={{
-                position: 'absolute',
-                top: '50px',
-                left: '-20px',
-                background: 'white',
-                borderRadius: '8px',
-                padding: '12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#6c757d' 
               }}>
-                <FileText size={24} color="#f6d55c" />
+                Assessment Types
               </div>
-
-              <div style={{
-                position: 'absolute',
-                bottom: '80px',
-                right: '-20px',
-                background: 'white',
-                borderRadius: '8px',
-                padding: '12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                fontSize: '32px', 
+                fontWeight: '700', 
+                color: '#f6d55c' 
               }}>
-                <Sparkles size={24} color="#ff8a65" />
+                Excel
+              </div>
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#6c757d' 
+              }}>
+                Based
               </div>
             </div>
           </div>
@@ -311,21 +188,16 @@ const Home = () => {
 
         {/* Quick Access Section */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '20px',
-          padding: '40px',
-          marginBottom: '60px',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
+          marginBottom: '60px'
         }}>
           <h2 style={{ 
             fontSize: '32px', 
             fontWeight: '600', 
-            color: 'white',
+            color: '#333',
             textAlign: 'center',
             marginBottom: '40px'
           }}>
-            Quick Start Options
+            Popular Assessments
           </h2>
 
           <div style={{
@@ -336,29 +208,17 @@ const Home = () => {
             {/* Programming Skills */}
             <Link 
               to="/assessment/coding"
+              className="card"
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                padding: '24px',
                 textDecoration: 'none',
-                color: 'white',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'inherit',
                 transition: 'all 0.3s ease',
                 display: 'block'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-4px)'
-                e.target.style.background = 'rgba(255, 255, 255, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.background = 'rgba(255, 255, 255, 0.1)'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #f6d55c, #4db6ac)',
+                  background: '#f6d55c',
                   borderRadius: '8px',
                   padding: '8px'
                 }}>
@@ -368,7 +228,7 @@ const Home = () => {
               </div>
               <p style={{ 
                 fontSize: '14px', 
-                color: 'rgba(255, 255, 255, 0.8)',
+                color: '#666',
                 margin: '0 0 12px 0'
               }}>
                 Test your coding abilities with algorithmic problems
@@ -378,7 +238,7 @@ const Home = () => {
                 alignItems: 'center', 
                 gap: '8px',
                 fontSize: '12px',
-                color: 'rgba(255, 255, 255, 0.6)'
+                color: '#999'
               }}>
                 <span>{questionCounts.coding || 9} questions</span>
                 <ArrowRight size={16} />
@@ -388,29 +248,17 @@ const Home = () => {
             {/* Personality Assessment */}
             <Link 
               to="/assessment/personality"
+              className="card"
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                padding: '24px',
                 textDecoration: 'none',
-                color: 'white',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'inherit',
                 transition: 'all 0.3s ease',
                 display: 'block'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-4px)'
-                e.target.style.background = 'rgba(255, 255, 255, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.background = 'rgba(255, 255, 255, 0.1)'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #ffb74d, #ff8a65)',
+                  background: '#ff8a65',
                   borderRadius: '8px',
                   padding: '8px'
                 }}>
@@ -420,7 +268,7 @@ const Home = () => {
               </div>
               <p style={{ 
                 fontSize: '14px', 
-                color: 'rgba(255, 255, 255, 0.8)',
+                color: '#666',
                 margin: '0 0 12px 0'
               }}>
                 Discover your behavioral tendencies and work style
@@ -430,7 +278,7 @@ const Home = () => {
                 alignItems: 'center', 
                 gap: '8px',
                 fontSize: '12px',
-                color: 'rgba(255, 255, 255, 0.6)'
+                color: '#999'
               }}>
                 <span>{questionCounts.personality || 50} questions</span>
                 <ArrowRight size={16} />
@@ -440,29 +288,17 @@ const Home = () => {
             {/* AP Physics */}
             <Link 
               to="/assessment/ap-physics-10th"
+              className="card"
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                padding: '24px',
                 textDecoration: 'none',
-                color: 'white',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'inherit',
                 transition: 'all 0.3s ease',
                 display: 'block'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-4px)'
-                e.target.style.background = 'rgba(255, 255, 255, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.background = 'rgba(255, 255, 255, 0.1)'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #4db6ac, #26a69a)',
+                  background: '#4db6ac',
                   borderRadius: '8px',
                   padding: '8px'
                 }}>
@@ -472,7 +308,7 @@ const Home = () => {
               </div>
               <p style={{ 
                 fontSize: '14px', 
-                color: 'rgba(255, 255, 255, 0.8)',
+                color: '#666',
                 margin: '0 0 12px 0'
               }}>
                 Master physics concepts with comprehensive problems
@@ -482,7 +318,7 @@ const Home = () => {
                 alignItems: 'center', 
                 gap: '8px',
                 fontSize: '12px',
-                color: 'rgba(255, 255, 255, 0.6)'
+                color: '#999'
               }}>
                 <span>{questionCounts['ap-physics-10th'] || 20} questions</span>
                 <ArrowRight size={16} />
@@ -494,24 +330,11 @@ const Home = () => {
           <div style={{ textAlign: 'center', marginTop: '32px' }}>
             <Link 
               to="/assessments"
+              className="btn btn-secondary"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                padding: '12px 24px',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                fontSize: '16px',
-                fontWeight: '500',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = 'rgba(255, 255, 255, 0.3)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'rgba(255, 255, 255, 0.2)'
+                gap: '8px'
               }}
             >
               View All Assessments

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { questionManager } from '../utils/questionManager'
+import { assessmentTypesService } from '../services/database'
+import { useAuth } from '../contexts/AuthContext'
 
 const Assessment = () => {
   const { type } = useParams()
@@ -10,7 +12,10 @@ const Assessment = () => {
   const [answers, setAnswers] = useState({})
   const [timeLeft, setTimeLeft] = useState(0)
   const [isStarted, setIsStarted] = useState(false)
+  const [assessmentInfo, setAssessmentInfo] = useState(null)
+  const [loading, setLoading] = useState(true)
 
+  const { user } = useAuth()
   const questions = questionManager.getQuestions(type) || []
   
   // Calculate dynamic time limit based on actual question count
@@ -38,6 +43,10 @@ const Assessment = () => {
   const timeLimit = getTimeLimit(type, questions.length)
 
   useEffect(() => {
+    loadAssessmentInfo()
+  }, [type, user])
+
+  useEffect(() => {
     if (isStarted && timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
       return () => clearTimeout(timer)
@@ -45,6 +54,63 @@ const Assessment = () => {
       handleSubmit()
     }
   }, [timeLeft, isStarted])
+
+  const loadAssessmentInfo = async () => {
+    setLoading(true)
+    
+    // Check if this is a custom assessment type
+    if (user) {
+      try {
+        const { data: customTypes } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+        const customType = customTypes?.find(ct => ct.id === type)
+        
+        if (customType) {
+          setAssessmentInfo({
+            name: customType.name,
+            description: customType.description,
+            isCustom: true
+          })
+        } else {
+          // Default assessment type
+          setAssessmentInfo({
+            name: getDefaultAssessmentName(type),
+            isCustom: false
+          })
+        }
+      } catch (error) {
+        console.error('Error loading assessment info:', error)
+        setAssessmentInfo({
+          name: getDefaultAssessmentName(type),
+          isCustom: false
+        })
+      }
+    } else {
+      setAssessmentInfo({
+        name: getDefaultAssessmentName(type),
+        isCustom: false
+      })
+    }
+    
+    setLoading(false)
+  }
+
+  const getDefaultAssessmentName = (assessmentType) => {
+    const names = {
+      'coding': 'Programming Skills',
+      'system-design': 'System Design',
+      'frontend': 'Frontend Development',
+      'behavioral': 'Behavioral Assessment',
+      'personality': 'Personality Assessment',
+      'ai-business-analyst': 'AI Business Analysis',
+      'ai-solution-architect': 'AI Solution Architecture',
+      'microservices': 'Microservices Architecture',
+      'event-driven-architecture': 'Event-Driven Architecture',
+      'serverless-architecture': 'Serverless Architecture',
+      'full-stack-development': 'Full-Stack Development',
+      'ap-physics-10th': 'AP Physics (10th Grade)'
+    }
+    return names[assessmentType] || assessmentType.replace('-', ' ')
+  }
 
   const startAssessment = () => {
     setIsStarted(true)
@@ -77,10 +143,19 @@ const Assessment = () => {
     navigate('/results')
   }
 
+  if (loading) {
+    return (
+      <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
+        <h2>Loading assessment...</h2>
+      </div>
+    )
+  }
+
   if (!questions.length) {
     return (
       <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
         <h2>Assessment not found</h2>
+        <p>This assessment has no questions available.</p>
         <button onClick={() => navigate('/')} className="btn btn-primary">
           Back to Home
         </button>
@@ -92,13 +167,18 @@ const Assessment = () => {
     return (
       <div className="container" style={{ padding: '40px 20px' }}>
         <div className="card" style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <h1 style={{ marginBottom: '24px', textTransform: 'capitalize' }}>
-            {type.replace('-', ' ')} Assessment
+          <h1 style={{ marginBottom: '24px' }}>
+            {assessmentInfo?.name || type.replace('-', ' ')} Assessment
           </h1>
+          {assessmentInfo?.description && (
+            <p style={{ fontSize: '16px', color: '#5f6368', marginBottom: '16px' }}>
+              {assessmentInfo.description}
+            </p>
+          )}
           
           <div style={{ marginBottom: '32px' }}>
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>
-              You are about to start the {type.replace('-', ' ')} assessment.
+              You are about to start the {assessmentInfo?.name || type.replace('-', ' ')} assessment.
             </p>
             <div style={{ 
               display: 'grid', 
@@ -157,8 +237,8 @@ const Assessment = () => {
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
         <div>
-          <h2 style={{ margin: 0, textTransform: 'capitalize' }}>
-            {type.replace('-', ' ')} Assessment
+          <h2 style={{ margin: 0 }}>
+            {assessmentInfo?.name || type.replace('-', ' ')} Assessment
           </h2>
           <p style={{ margin: 0, color: '#5f6368' }}>
             Question {currentQuestion + 1} of {questions.length}

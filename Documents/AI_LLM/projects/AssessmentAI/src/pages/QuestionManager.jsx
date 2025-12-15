@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Download, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Trash2, Download, BarChart3, Plus, FileText, Brain, Code, Users, Globe, Layers, Zap, Database, Settings, BookOpen } from 'lucide-react'
 import QuestionUpload from '../components/QuestionUpload'
+import CreateAssessmentType from '../components/CreateAssessmentType'
 import { questionManager } from '../utils/questionManager'
+import { assessmentTypesService } from '../services/database'
+import { useAuth } from '../contexts/AuthContext'
 import * as XLSX from 'xlsx'
 
 const QuestionManagerPage = () => {
@@ -11,26 +14,77 @@ const QuestionManagerPage = () => {
   const [questionStats, setQuestionStats] = useState({})
   const [customQuestions, setCustomQuestions] = useState([])
   const [selectedQuestions, setSelectedQuestions] = useState(new Set())
+  const [customAssessmentTypes, setCustomAssessmentTypes] = useState([])
+  const [showCreateAssessment, setShowCreateAssessment] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const assessmentTypes = [
-    { id: 'coding', name: 'Programming Skills' },
-    { id: 'system-design', name: 'System Design' },
-    { id: 'frontend', name: 'Frontend Development' },
-    { id: 'behavioral', name: 'Behavioral Assessment' },
-    { id: 'personality', name: 'Personality Assessment' },
-    { id: 'ai-business-analyst', name: 'AI Business Analysis' },
-    { id: 'ai-solution-architect', name: 'AI Solution Architecture' },
-    { id: 'microservices', name: 'Microservices Architecture' },
-    { id: 'event-driven-architecture', name: 'Event-Driven Architecture' },
-    { id: 'serverless-architecture', name: 'Serverless Architecture' },
-    { id: 'full-stack-development', name: 'Full-Stack Development' },
-    { id: 'ap-physics-10th', name: 'AP Physics (10th Grade)' }
+  const { user } = useAuth()
+
+  const defaultAssessmentTypes = [
+    { id: 'coding', name: 'Programming Skills', isDefault: true },
+    { id: 'system-design', name: 'System Design', isDefault: true },
+    { id: 'frontend', name: 'Frontend Development', isDefault: true },
+    { id: 'behavioral', name: 'Behavioral Assessment', isDefault: true },
+    { id: 'personality', name: 'Personality Assessment', isDefault: true },
+    { id: 'ai-business-analyst', name: 'AI Business Analysis', isDefault: true },
+    { id: 'ai-solution-architect', name: 'AI Solution Architecture', isDefault: true },
+    { id: 'microservices', name: 'Microservices Architecture', isDefault: true },
+    { id: 'event-driven-architecture', name: 'Event-Driven Architecture', isDefault: true },
+    { id: 'serverless-architecture', name: 'Serverless Architecture', isDefault: true },
+    { id: 'full-stack-development', name: 'Full-Stack Development', isDefault: true },
+    { id: 'ap-physics-10th', name: 'AP Physics (10th Grade)', isDefault: true }
   ]
+
+  // Get icon component by name
+  const getIconComponent = (iconName) => {
+    const icons = {
+      FileText, Brain, Code, Users, Globe, Layers, Zap, Database, Settings, BookOpen
+    }
+    return icons[iconName] || FileText
+  }
+
+  // Combine default and custom assessment types
+  const assessmentTypes = [
+    ...defaultAssessmentTypes,
+    ...customAssessmentTypes.map(custom => ({
+      id: custom.id,
+      name: custom.name,
+      description: custom.description,
+      icon: custom.icon,
+      color: custom.color,
+      isCustom: true
+    }))
+  ]
+
+  useEffect(() => {
+    if (user) {
+      loadCustomAssessmentTypes()
+    }
+  }, [user])
 
   useEffect(() => {
     updateStats()
     loadCustomQuestions()
-  }, [selectedAssessment])
+  }, [selectedAssessment, customAssessmentTypes])
+
+  const loadCustomAssessmentTypes = async () => {
+    if (!user) return
+
+    try {
+      setLoading(true)
+      const { data, error } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+      
+      if (error) {
+        console.error('Error loading custom assessment types:', error)
+      } else {
+        setCustomAssessmentTypes(data || [])
+      }
+    } catch (error) {
+      console.error('Error loading custom assessment types:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const updateStats = () => {
     const stats = {}
@@ -113,6 +167,15 @@ const QuestionManagerPage = () => {
     }
   }
 
+  const handleAssessmentCreated = (newAssessment) => {
+    // Reload custom assessment types
+    loadCustomAssessmentTypes()
+    // Select the newly created assessment
+    setSelectedAssessment(newAssessment.id)
+    // Show success message
+    alert(`✅ Successfully created "${newAssessment.name}" assessment!`)
+  }
+
   const handleExportQuestions = () => {
     try {
       const questions = questionManager.exportCustomQuestions(selectedAssessment)
@@ -193,31 +256,94 @@ const QuestionManagerPage = () => {
 
       {/* Assessment Type Selector */}
       <div className="card" style={{ marginBottom: '24px' }}>
-        <h2 style={{ marginBottom: '16px' }}>Select Assessment Type</h2>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <h2 style={{ margin: 0 }}>Select Assessment Type</h2>
+          {user && (
+            <button
+              onClick={() => setShowCreateAssessment(true)}
+              className="btn btn-primary"
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                background: '#f6d55c',
+                color: '#333'
+              }}
+            >
+              <Plus size={16} />
+              Create New Assessment
+            </button>
+          )}
+        </div>
+        
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '12px'
         }}>
-          {assessmentTypes.map(type => (
-            <button
-              key={type.id}
-              onClick={() => setSelectedAssessment(type.id)}
-              className={`btn ${selectedAssessment === type.id ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ 
-                textAlign: 'left',
-                padding: '12px 16px'
-              }}
-            >
-              <div style={{ fontWeight: '500' }}>{type.name}</div>
-              {questionStats[type.id] && (
-                <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                  {questionStats[type.id].total} questions 
-                  ({questionStats[type.id].custom} custom)
+          {assessmentTypes.map(type => {
+            const IconComponent = type.isCustom ? getIconComponent(type.icon) : null
+            return (
+              <button
+                key={type.id}
+                onClick={() => setSelectedAssessment(type.id)}
+                className={`btn ${selectedAssessment === type.id ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ 
+                  textAlign: 'left',
+                  padding: '12px 16px',
+                  background: selectedAssessment === type.id 
+                    ? (type.isCustom ? type.color : '#4285f4')
+                    : 'white',
+                  borderColor: selectedAssessment === type.id 
+                    ? (type.isCustom ? type.color : '#4285f4')
+                    : '#e0e0e0',
+                  color: selectedAssessment === type.id ? 'white' : '#333'
+                }}
+              >
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  marginBottom: type.isCustom ? '4px' : '0'
+                }}>
+                  {type.isCustom && IconComponent && (
+                    <IconComponent size={16} />
+                  )}
+                  <div style={{ fontWeight: '500' }}>{type.name}</div>
+                  {type.isCustom && (
+                    <span style={{ 
+                      fontSize: '10px', 
+                      background: 'rgba(255,255,255,0.2)',
+                      padding: '2px 6px',
+                      borderRadius: '4px'
+                    }}>
+                      CUSTOM
+                    </span>
+                  )}
                 </div>
-              )}
-            </button>
-          ))}
+                {type.isCustom && type.description && (
+                  <div style={{ 
+                    fontSize: '11px', 
+                    opacity: 0.9,
+                    marginBottom: '4px'
+                  }}>
+                    {type.description}
+                  </div>
+                )}
+                {questionStats[type.id] && (
+                  <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                    {questionStats[type.id].total} questions 
+                    ({questionStats[type.id].custom} custom)
+                  </div>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -630,6 +756,14 @@ const QuestionManagerPage = () => {
             Upload an Excel file with your questions to get started.
           </p>
         </div>
+      )}
+
+      {/* Create Assessment Type Modal */}
+      {showCreateAssessment && (
+        <CreateAssessmentType
+          onAssessmentCreated={handleAssessmentCreated}
+          onClose={() => setShowCreateAssessment(false)}
+        />
       )}
     </div>
   )

@@ -24,11 +24,42 @@ CREATE POLICY "Users can update own profile" ON public.profiles
 CREATE POLICY "Users can insert own profile" ON public.profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
 
+-- Create custom_assessment_types table
+CREATE TABLE IF NOT EXISTS public.custom_assessment_types (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    icon TEXT DEFAULT 'FileText',
+    color TEXT DEFAULT '#f6d55c',
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, name)
+);
+
+-- Enable RLS on custom_assessment_types
+ALTER TABLE public.custom_assessment_types ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for custom_assessment_types
+CREATE POLICY "Users can view own assessment types" ON public.custom_assessment_types
+    FOR SELECT USING (auth.uid() = user_id OR is_public = true);
+
+CREATE POLICY "Users can insert own assessment types" ON public.custom_assessment_types
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own assessment types" ON public.custom_assessment_types
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own assessment types" ON public.custom_assessment_types
+    FOR DELETE USING (auth.uid() = user_id);
+
 -- Create custom_questions table
 CREATE TABLE IF NOT EXISTS public.custom_questions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     assessment_type TEXT NOT NULL,
+    custom_assessment_id UUID REFERENCES public.custom_assessment_types(id) ON DELETE CASCADE,
     question_data JSONB NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -74,8 +105,11 @@ CREATE POLICY "Users can insert own results" ON public.assessment_results
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_custom_assessment_types_user_id ON public.custom_assessment_types(user_id);
+CREATE INDEX IF NOT EXISTS idx_custom_assessment_types_public ON public.custom_assessment_types(is_public);
 CREATE INDEX IF NOT EXISTS idx_custom_questions_user_id ON public.custom_questions(user_id);
 CREATE INDEX IF NOT EXISTS idx_custom_questions_assessment_type ON public.custom_questions(assessment_type);
+CREATE INDEX IF NOT EXISTS idx_custom_questions_custom_assessment_id ON public.custom_questions(custom_assessment_id);
 CREATE INDEX IF NOT EXISTS idx_assessment_results_user_id ON public.assessment_results(user_id);
 CREATE INDEX IF NOT EXISTS idx_assessment_results_assessment_type ON public.assessment_results(assessment_type);
 
@@ -111,4 +145,8 @@ CREATE TRIGGER update_profiles_updated_at
 
 CREATE TRIGGER update_custom_questions_updated_at
     BEFORE UPDATE ON public.custom_questions
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_custom_assessment_types_updated_at
+    BEFORE UPDATE ON public.custom_assessment_types
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

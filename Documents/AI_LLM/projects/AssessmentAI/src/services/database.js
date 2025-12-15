@@ -34,6 +34,68 @@ export const profileService = {
   }
 }
 
+// Custom Assessment Types Services
+export const assessmentTypesService = {
+  async getUserAssessmentTypes(userId) {
+    const { data, error } = await supabase
+      .from('custom_assessment_types')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    return { data, error }
+  },
+
+  async getPublicAssessmentTypes() {
+    const { data, error } = await supabase
+      .from('custom_assessment_types')
+      .select('*')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+    
+    return { data, error }
+  },
+
+  async createAssessmentType(userId, assessmentData) {
+    const { data, error } = await supabase
+      .from('custom_assessment_types')
+      .insert([{
+        user_id: userId,
+        name: assessmentData.name,
+        description: assessmentData.description,
+        icon: assessmentData.icon || 'FileText',
+        color: assessmentData.color || '#f6d55c',
+        is_public: assessmentData.isPublic || false
+      }])
+      .select()
+      .single()
+    
+    return { data, error }
+  },
+
+  async updateAssessmentType(userId, assessmentId, updates) {
+    const { data, error } = await supabase
+      .from('custom_assessment_types')
+      .update(updates)
+      .eq('user_id', userId)
+      .eq('id', assessmentId)
+      .select()
+      .single()
+    
+    return { data, error }
+  },
+
+  async deleteAssessmentType(userId, assessmentId) {
+    const { data, error } = await supabase
+      .from('custom_assessment_types')
+      .delete()
+      .eq('user_id', userId)
+      .eq('id', assessmentId)
+    
+    return { data, error }
+  }
+}
+
 // Custom Questions Services
 export const questionsService = {
   async getUserQuestions(userId, assessmentType = null) {
@@ -51,10 +113,11 @@ export const questionsService = {
     return { data, error }
   },
 
-  async addQuestions(userId, assessmentType, questions) {
+  async addQuestions(userId, assessmentType, questions, customAssessmentId = null) {
     const questionsToInsert = questions.map(question => ({
       user_id: userId,
       assessment_type: assessmentType,
+      custom_assessment_id: customAssessmentId,
       question_data: question
     }))
 

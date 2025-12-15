@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Upload, FileText, Brain, Sparkles, ArrowRight, Play, Users, Globe } from 'lucide-react'
+import { Upload, FileText, Brain, Sparkles, ArrowRight, Play, Users, Globe, Code, Database, Layers, Zap, Settings, BookOpen } from 'lucide-react'
 import { questionManager } from '../utils/questionManager'
+import { assessmentTypesService } from '../services/database'
+import { useAuth } from '../contexts/AuthContext'
 
 const Home = () => {
   const [questionCounts, setQuestionCounts] = useState({})
+  const [customAssessments, setCustomAssessments] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const { user } = useAuth()
+
+  // Get icon component by name
+  const getIconComponent = (iconName) => {
+    const icons = {
+      FileText, Brain, Code, Users, Globe, Layers, Zap, Database, Settings, BookOpen
+    }
+    return icons[iconName] || FileText
+  }
 
   useEffect(() => {
     // Get actual question counts including custom questions
@@ -26,6 +40,7 @@ const Home = () => {
     }
 
     updateCounts()
+    loadCustomAssessments()
 
     // Listen for storage changes to update counts when questions are added
     const handleStorageChange = () => {
@@ -35,13 +50,46 @@ const Home = () => {
     window.addEventListener('storage', handleStorageChange)
     
     // Also listen for focus events to update when returning from question manager
-    window.addEventListener('focus', updateCounts)
+    window.addEventListener('focus', () => {
+      updateCounts()
+      loadCustomAssessments()
+    })
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('focus', updateCounts)
     }
-  }, [])
+  }, [user])
+
+  const loadCustomAssessments = async () => {
+    if (!user) {
+      setCustomAssessments([])
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { data, error } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+      
+      if (error) {
+        console.error('Error loading custom assessments:', error)
+      } else {
+        // Get question counts for custom assessments
+        const assessmentsWithCounts = (data || []).map(assessment => {
+          const stats = questionManager.getQuestionStats(assessment.id)
+          return {
+            ...assessment,
+            questionCount: stats.total
+          }
+        })
+        setCustomAssessments(assessmentsWithCounts)
+      }
+    } catch (error) {
+      console.error('Error loading custom assessments:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const totalQuestions = Object.values(questionCounts).reduce((sum, count) => sum + count, 0)
 
@@ -342,6 +390,155 @@ const Home = () => {
             </Link>
           </div>
         </div>
+
+        {/* Custom Assessments Section */}
+        {user && customAssessments.length > 0 && (
+          <div style={{ marginBottom: '60px' }}>
+            <h2 style={{ 
+              fontSize: '32px', 
+              fontWeight: '600', 
+              color: '#333',
+              textAlign: 'center',
+              marginBottom: '40px'
+            }}>
+              Your Custom Assessments
+            </h2>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '24px'
+            }}>
+              {customAssessments.slice(0, 6).map((assessment) => {
+                const IconComponent = getIconComponent(assessment.icon)
+                return (
+                  <Link 
+                    key={assessment.id}
+                    to={`/assessment/${assessment.id}`}
+                    className="card"
+                    style={{
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      transition: 'all 0.3s ease',
+                      display: 'block',
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                      <div style={{
+                        background: assessment.color,
+                        borderRadius: '8px',
+                        padding: '8px'
+                      }}>
+                        <IconComponent size={20} color="white" />
+                      </div>
+                      <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+                        {assessment.name}
+                      </h3>
+                      <span style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        fontSize: '10px',
+                        background: assessment.color + '20',
+                        color: assessment.color,
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontWeight: '500'
+                      }}>
+                        CUSTOM
+                      </span>
+                    </div>
+                    <p style={{ 
+                      fontSize: '14px', 
+                      color: '#666',
+                      margin: '0 0 12px 0'
+                    }}>
+                      {assessment.description || 'Custom assessment created by you'}
+                    </p>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px',
+                      fontSize: '12px',
+                      color: '#999'
+                    }}>
+                      <span>{assessment.questionCount || 0} questions</span>
+                      <ArrowRight size={16} />
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+
+            {customAssessments.length > 6 && (
+              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <Link 
+                  to="/assessments"
+                  className="btn btn-secondary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  View All Custom Assessments
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create Custom Assessment CTA */}
+        {user && (
+          <div style={{
+            background: '#f8f9fa',
+            borderRadius: '16px',
+            padding: '40px',
+            textAlign: 'center',
+            marginBottom: '60px',
+            border: '2px dashed #dee2e6'
+          }}>
+            <h2 style={{ 
+              fontSize: '28px', 
+              fontWeight: '600', 
+              color: '#333',
+              marginBottom: '16px'
+            }}>
+              Create Your Own Assessment
+            </h2>
+            <p style={{ 
+              fontSize: '18px', 
+              color: '#666',
+              marginBottom: '32px',
+              maxWidth: '500px',
+              margin: '0 auto 32px auto'
+            }}>
+              Upload your Excel files to create personalized assessments for any subject or skill
+            </p>
+            <Link 
+              to="/questions"
+              className="btn btn-primary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#f6d55c',
+                color: '#333',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontSize: '16px',
+                fontWeight: '500',
+                border: 'none'
+              }}
+            >
+              <Upload size={20} />
+              Create Assessment
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

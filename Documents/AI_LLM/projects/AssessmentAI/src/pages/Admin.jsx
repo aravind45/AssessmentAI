@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, BarChart3, Settings, Shield, Database, AlertTriangle, CheckCircle, Eye, EyeOff, Trash2, Plus, Edit2 } from 'lucide-react'
+import { Users, FileText, BarChart3, Settings, Shield, Database, AlertTriangle, CheckCircle, Eye, EyeOff, Trash2, Plus, Edit2, Upload } from 'lucide-react'
 import { resultsService, assessmentTypesService, questionsService } from '../services/database'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { isAdmin } from '../config/admin'
 import CreateAssessmentType from '../components/CreateAssessmentType'
 import EditAssessmentType from '../components/EditAssessmentType'
+import MigrateAssessments from '../components/MigrateAssessments'
 
 const Admin = () => {
   const [stats, setStats] = useState(null)
@@ -19,6 +20,7 @@ const Admin = () => {
   const [selectedAssessments, setSelectedAssessments] = useState(new Set())
   const [showCreateAssessment, setShowCreateAssessment] = useState(false)
   const [editingAssessment, setEditingAssessment] = useState(null)
+  const [showMigration, setShowMigration] = useState(false)
 
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -248,6 +250,12 @@ const Admin = () => {
 
   const handleCreateAssessment = () => {
     setShowCreateAssessment(true)
+  }
+
+  const handleMigrationComplete = () => {
+    // Reload assessments after migration
+    loadPublicAssessments()
+    setShowMigration(false)
   }
 
   const handleAssessmentCreated = (newAssessment) => {
@@ -551,6 +559,30 @@ const Admin = () => {
                 <BarChart3 size={20} />
                 View Activity
               </button>
+              
+              <button
+                onClick={() => setShowMigration(true)}
+                style={{
+                  background: '#f3e5f5',
+                  border: '1px solid #9c27b0',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  color: '#7b1fa2',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                <Database size={20} />
+                Migrate Assessments
+              </button>
             </div>
           </div>
         </div>
@@ -601,6 +633,27 @@ const Admin = () => {
             <h2 style={{ margin: 0 }}>All Custom Assessments</h2>
             
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Migration Button */}
+              <button
+                onClick={() => setShowMigration(true)}
+                style={{
+                  background: '#e3f2fd',
+                  border: '1px solid #2196f3',
+                  borderRadius: '6px',
+                  padding: '10px 16px',
+                  cursor: 'pointer',
+                  color: '#1976d2',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Upload size={16} />
+                Migrate from localStorage
+              </button>
+
               {/* Create Assessment Button */}
               <button
                 onClick={handleCreateAssessment}
@@ -892,6 +945,14 @@ const Admin = () => {
           assessment={editingAssessment}
           onAssessmentUpdated={handleAssessmentUpdated}
           onClose={() => setEditingAssessment(null)}
+        />
+      )}
+
+      {/* Migration Modal */}
+      {showMigration && (
+        <MigrateAssessments
+          onClose={() => setShowMigration(false)}
+          onMigrationComplete={handleMigrationComplete}
         />
       )}
     </div>

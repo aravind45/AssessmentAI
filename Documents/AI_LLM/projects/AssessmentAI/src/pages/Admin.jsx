@@ -21,7 +21,7 @@ const Admin = () => {
 
   useEffect(() => {
     // Check if user is admin
-    if (!user || !isAdmin(user.id)) {
+    if (!user || !isAdmin(user)) {
       navigate('/')
       return
     }
@@ -252,7 +252,7 @@ const Admin = () => {
     })
   }
 
-  if (!user || !isAdmin(user.id)) {
+  if (!user || !isAdmin(user)) {
     return (
       <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
         <Shield size={64} color="#f44336" style={{ marginBottom: '16px' }} />

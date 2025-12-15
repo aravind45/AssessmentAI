@@ -91,7 +91,7 @@ const Header = () => {
                   >
                     Manage Questions
                   </Link>
-                  {isAdmin(user?.id) && (
+                  {isAdmin(user) && (
                     <Link 
                       to="/admin"
                       style={{
@@ -240,7 +240,7 @@ const Header = () => {
                   <Settings size={16} />
                   Manage Questions
                 </Link>
-                {isAdmin(user?.id) && (
+                {isAdmin(user) && (
                   <Link 
                     to="/admin" 
                     className="btn btn-secondary"

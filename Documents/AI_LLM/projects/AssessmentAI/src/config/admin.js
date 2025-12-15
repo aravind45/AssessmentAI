@@ -1,14 +1,29 @@
 // Admin Configuration
-// Add your admin user IDs here
-export const ADMIN_USERS = [
-  // Replace with actual admin user IDs from Supabase auth.users table
-  // Example: 'uuid-of-admin-user-1',
-  // Example: 'uuid-of-admin-user-2',
+// Add admin user emails here (easier than managing UUIDs)
+export const ADMIN_EMAILS = [
+  'aravind45@gmail.com'
 ]
 
-// Check if a user is an admin
-export const isAdmin = (userId) => {
-  return ADMIN_USERS.includes(userId)
+// Legacy: Admin user IDs (for backward compatibility)
+export const ADMIN_USERS = [
+  // Add user IDs here if needed
+]
+
+// Check if a user is an admin (by email or user ID)
+export const isAdmin = (user) => {
+  if (!user) return false
+  
+  // Check by email (primary method)
+  if (user.email && ADMIN_EMAILS.includes(user.email)) {
+    return true
+  }
+  
+  // Check by user ID (fallback)
+  if (user.id && ADMIN_USERS.includes(user.id)) {
+    return true
+  }
+  
+  return false
 }
 
 // Admin permissions
@@ -20,7 +35,7 @@ export const ADMIN_PERMISSIONS = {
 }
 
 // Check if admin has specific permission (for future use)
-export const hasPermission = (userId, permission) => {
+export const hasPermission = (user, permission) => {
   // For now, all admins have all permissions
-  return isAdmin(userId)
+  return isAdmin(user)
 }

@@ -8,6 +8,7 @@ import Assessment from './pages/Assessment'
 import Results from './pages/Results'
 import QuestionManager from './pages/QuestionManager'
 import Assessments from './pages/Assessments'
+import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -26,6 +27,11 @@ function App() {
               <Route path="/assessments" element={<Assessments />} />
               <Route path="/assessment/:type" element={<Assessment />} />
               <Route path="/results" element={<Results />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
               <Route path="/questions" element={
                 <ProtectedRoute>
                   <QuestionManager />

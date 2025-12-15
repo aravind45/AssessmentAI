@@ -4,6 +4,8 @@ import { CheckCircle, XCircle, Clock, Award, BarChart3, Home, AlertTriangle, Tre
 import { analyzeInconsistencies, getConsistencyLevel, generateRecommendations } from '../utils/inconsistencyAnalysis'
 import ConsistencyImprovementPlan from '../components/ConsistencyImprovementPlan'
 import SpecificInconsistencyGuide from '../components/SpecificInconsistencyGuide'
+import { resultsService } from '../services/database'
+import { useAuth } from '../contexts/AuthContext'
 
 const Results = () => {
   const navigate = useNavigate()
@@ -11,6 +13,10 @@ const Results = () => {
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState([])
   const [inconsistencyAnalysis, setInconsistencyAnalysis] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const { user } = useAuth()
 
   useEffect(() => {
     const savedResults = localStorage.getItem('assessmentResults')
@@ -23,6 +29,46 @@ const Results = () => {
     setResults(data)
     calculateScore(data)
   }, [navigate])
+
+  // Save results to database when score is calculated
+  useEffect(() => {
+    if (results && score !== null && user && !saved) {
+      saveResultsToDatabase()
+    }
+  }, [results, score, user, saved])
+
+  const saveResultsToDatabase = async () => {
+    if (!user || saving || saved) return
+
+    try {
+      setSaving(true)
+      
+      const assessmentData = {
+        assessmentType: results.type,
+        score: results.type === 'personality' ? score : Math.round((score / 100) * results.questions.length),
+        totalQuestions: results.questions.length,
+        timeTaken: results.timeSpent,
+        answers: results.answers,
+        resultsData: {
+          feedback,
+          inconsistencyAnalysis,
+          scorePercentage: score
+        }
+      }
+
+      const { error } = await resultsService.saveResult(user.id, assessmentData)
+      
+      if (error) {
+        console.error('Error saving results:', error)
+      } else {
+        setSaved(true)
+      }
+    } catch (error) {
+      console.error('Error saving results:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const calculateScore = (data) => {
     if (data.type === 'personality') {
@@ -170,6 +216,21 @@ const Results = () => {
           <p style={{ color: '#5f6368', fontSize: '18px', textTransform: 'capitalize' }}>
             {results.type.replace('-', ' ')} Assessment Results
           </p>
+          {user && (
+            <div style={{ 
+              marginTop: '12px',
+              fontSize: '14px',
+              color: saving ? '#ff9800' : saved ? '#4caf50' : '#666',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}>
+              {saving && '⏳ Saving results...'}
+              {saved && '✅ Results saved to your dashboard'}
+              {!saving && !saved && user && '💾 Results will be saved to your dashboard'}
+            </div>
+          )}
         </div>
 
         <div style={{ 
@@ -231,11 +292,17 @@ const Results = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-          <button onClick={() => navigate('/')} className="btn btn-primary">
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => navigate('/')} className="btn btn-secondary">
             <Home size={20} style={{ marginRight: '8px' }} />
             Back to Home
           </button>
+          {user && (
+            <button onClick={() => navigate('/dashboard')} className="btn btn-primary">
+              <BarChart3 size={20} style={{ marginRight: '8px' }} />
+              View Dashboard
+            </button>
+          )}
           <button 
             onClick={() => navigate(`/assessment/${results.type}`)} 
             className="btn btn-secondary"

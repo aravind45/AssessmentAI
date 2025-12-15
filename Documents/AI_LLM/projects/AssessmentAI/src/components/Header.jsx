@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Brain, Settings, LogOut, User } from 'lucide-react'
+import { Brain, Settings, LogOut, User, BarChart3 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Header = () => {
@@ -68,6 +68,17 @@ const Header = () => {
               
               {user ? (
                 <>
+                  <Link 
+                    to="/dashboard"
+                    style={{
+                      color: '#666',
+                      textDecoration: 'none',
+                      fontSize: '16px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Dashboard
+                  </Link>
                   <Link 
                     to="/questions"
                     style={{
@@ -189,6 +200,19 @@ const Header = () => {
             
             {user ? (
               <>
+                <Link 
+                  to="/dashboard" 
+                  className="btn btn-secondary"
+                  style={{
+                    color: location.pathname === '/dashboard' ? '#f6d55c' : '#5f6368',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <BarChart3 size={16} />
+                  Dashboard
+                </Link>
                 <Link 
                   to="/questions" 
                   className="btn btn-secondary"

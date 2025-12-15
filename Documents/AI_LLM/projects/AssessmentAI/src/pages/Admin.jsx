@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, BarChart3, Settings, Shield, Database, AlertTriangle, CheckCircle, Eye, EyeOff, Trash2 } from 'lucide-react'
+import { Users, FileText, BarChart3, Settings, Shield, Database, AlertTriangle, CheckCircle, Eye, EyeOff, Trash2, Plus, Edit2 } from 'lucide-react'
 import { resultsService, assessmentTypesService, questionsService } from '../services/database'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { isAdmin } from '../config/admin'
+import CreateAssessmentType from '../components/CreateAssessmentType'
+import EditAssessmentType from '../components/EditAssessmentType'
 
 const Admin = () => {
   const [stats, setStats] = useState(null)
@@ -15,6 +17,8 @@ const Admin = () => {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedAssessments, setSelectedAssessments] = useState(new Set())
+  const [showCreateAssessment, setShowCreateAssessment] = useState(false)
+  const [editingAssessment, setEditingAssessment] = useState(null)
 
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -242,6 +246,57 @@ const Admin = () => {
     }
   }
 
+  const handleCreateAssessment = () => {
+    setShowCreateAssessment(true)
+  }
+
+  const handleAssessmentCreated = (newAssessment) => {
+    // Reload assessments
+    loadPublicAssessments()
+    // Show success message
+    alert(`✅ Successfully created "${newAssessment.name}" assessment!`)
+  }
+
+  const handleEditAssessment = (assessment) => {
+    setEditingAssessment(assessment)
+  }
+
+  const handleAssessmentUpdated = (updatedAssessment) => {
+    // Reload assessments
+    loadPublicAssessments()
+    // Show success message
+    alert(`✅ Successfully updated "${updatedAssessment.name}" assessment!`)
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedAssessments.size === 0) return
+    
+    const confirmMessage = `⚠️ DELETE ${selectedAssessments.size} ASSESSMENTS?\n\n` +
+      `This will permanently delete the selected assessments and all their questions.\n` +
+      `This action cannot be undone!\n\n` +
+      `Are you sure you want to proceed?`
+    
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('custom_assessment_types')
+        .delete()
+        .in('id', Array.from(selectedAssessments))
+
+      if (error) throw error
+      
+      await loadPublicAssessments()
+      setSelectedAssessments(new Set())
+      
+      alert(`✅ Successfully deleted ${selectedAssessments.size} assessments!`)
+    } catch (error) {
+      alert(`❌ Error deleting assessments: ${error.message}`)
+    }
+  }
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -392,6 +447,112 @@ const Admin = () => {
               </div>
             </div>
           </div>
+
+          {/* Quick Actions */}
+          <div className="card" style={{ marginTop: '32px' }}>
+            <h3 style={{ marginBottom: '20px', color: '#333' }}>Quick Actions</h3>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '16px'
+            }}>
+              <button
+                onClick={handleCreateAssessment}
+                style={{
+                  background: '#f6d55c',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  color: '#333',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                <Plus size={20} />
+                Create New Assessment
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('assessments')}
+                style={{
+                  background: '#e3f2fd',
+                  border: '1px solid #2196f3',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  color: '#1976d2',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                <FileText size={20} />
+                Manage Assessments
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('users')}
+                style={{
+                  background: '#e8f5e8',
+                  border: '1px solid #4caf50',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  color: '#2e7d32',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                <Users size={20} />
+                View Users
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('activity')}
+                style={{
+                  background: '#fff3e0',
+                  border: '1px solid #ff9800',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  color: '#f57c00',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                <BarChart3 size={20} />
+                View Activity
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -439,48 +600,91 @@ const Admin = () => {
           }}>
             <h2 style={{ margin: 0 }}>All Custom Assessments</h2>
             
-            {selectedAssessments.size > 0 && (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={handleBulkMakePublic}
-                  style={{
-                    background: '#e8f5e8',
-                    border: '1px solid #4caf50',
-                    borderRadius: '6px',
-                    padding: '8px 12px',
-                    cursor: 'pointer',
-                    color: '#137333',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Eye size={14} />
-                  Make Public ({selectedAssessments.size})
-                </button>
-                <button
-                  onClick={handleBulkMakePrivate}
-                  style={{
-                    background: '#fff3cd',
-                    border: '1px solid #ffc107',
-                    borderRadius: '6px',
-                    padding: '8px 12px',
-                    cursor: 'pointer',
-                    color: '#856404',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <EyeOff size={14} />
-                  Make Private ({selectedAssessments.size})
-                </button>
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Create Assessment Button */}
+              <button
+                onClick={handleCreateAssessment}
+                style={{
+                  background: '#f6d55c',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '10px 16px',
+                  cursor: 'pointer',
+                  color: '#333',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Plus size={16} />
+                Create Assessment
+              </button>
+
+              {/* Bulk Actions */}
+              {selectedAssessments.size > 0 && (
+                <>
+                  <button
+                    onClick={handleBulkMakePublic}
+                    style={{
+                      background: '#e8f5e8',
+                      border: '1px solid #4caf50',
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      color: '#137333',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Eye size={14} />
+                    Make Public ({selectedAssessments.size})
+                  </button>
+                  <button
+                    onClick={handleBulkMakePrivate}
+                    style={{
+                      background: '#fff3cd',
+                      border: '1px solid #ffc107',
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      color: '#856404',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <EyeOff size={14} />
+                    Make Private ({selectedAssessments.size})
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    style={{
+                      background: '#fce8e6',
+                      border: '1px solid #f44336',
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      color: '#d93025',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    Delete ({selectedAssessments.size})
+                  </button>
+                </>
+              )}
+            </div>
           </div>
           
           <div style={{ overflow: 'auto' }}>
@@ -547,14 +751,34 @@ const Admin = () => {
                       {formatDate(assessment.created_at)}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleEditAssessment(assessment)}
+                          style={{
+                            background: '#e3f2fd',
+                            border: '1px solid #2196f3',
+                            borderRadius: '4px',
+                            padding: '6px 10px',
+                            cursor: 'pointer',
+                            color: '#1976d2',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          title="Edit Assessment"
+                        >
+                          <Edit2 size={12} />
+                          Edit
+                        </button>
                         <button
                           onClick={() => toggleAssessmentVisibility(assessment.id, assessment.is_public)}
                           style={{
                             background: assessment.is_public ? '#fff3cd' : '#e8f5e8',
                             border: `1px solid ${assessment.is_public ? '#ffc107' : '#4caf50'}`,
                             borderRadius: '4px',
-                            padding: '6px 12px',
+                            padding: '6px 10px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -567,13 +791,13 @@ const Admin = () => {
                         >
                           {assessment.is_public ? (
                             <>
-                              <EyeOff size={14} />
-                              Make Private
+                              <EyeOff size={12} />
+                              Private
                             </>
                           ) : (
                             <>
-                              <Eye size={14} />
-                              Make Public
+                              <Eye size={12} />
+                              Public
                             </>
                           )}
                         </button>
@@ -583,7 +807,7 @@ const Admin = () => {
                             background: '#fce8e6',
                             border: '1px solid #f44336',
                             borderRadius: '4px',
-                            padding: '6px 12px',
+                            padding: '6px 10px',
                             cursor: 'pointer',
                             color: '#f44336',
                             fontSize: '12px',
@@ -594,7 +818,7 @@ const Admin = () => {
                           }}
                           title="Delete Assessment"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={12} />
                           Delete
                         </button>
                       </div>
@@ -652,6 +876,23 @@ const Admin = () => {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Create Assessment Modal */}
+      {showCreateAssessment && (
+        <CreateAssessmentType
+          onAssessmentCreated={handleAssessmentCreated}
+          onClose={() => setShowCreateAssessment(false)}
+        />
+      )}
+
+      {/* Edit Assessment Modal */}
+      {editingAssessment && (
+        <EditAssessmentType
+          assessment={editingAssessment}
+          onAssessmentUpdated={handleAssessmentUpdated}
+          onClose={() => setEditingAssessment(null)}
+        />
       )}
     </div>
   )

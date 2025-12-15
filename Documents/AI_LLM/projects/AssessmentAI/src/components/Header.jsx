@@ -115,7 +115,7 @@ const Header = () => {
               fontWeight: '600'
             }}
           >
-            <Brain size={32} color="#667eea" />
+            <Brain size={32} color="#f6d55c" />
             AssessmentAI
           </Link>
           
@@ -124,7 +124,7 @@ const Header = () => {
               to="/assessments" 
               className="btn btn-secondary"
               style={{
-                color: location.pathname === '/assessments' ? '#667eea' : '#5f6368'
+                color: location.pathname === '/assessments' ? '#f6d55c' : '#5f6368'
               }}
             >
               Assessments
@@ -133,7 +133,7 @@ const Header = () => {
               to="/questions" 
               className="btn btn-secondary"
               style={{
-                color: location.pathname === '/questions' ? '#667eea' : '#5f6368',
+                color: location.pathname === '/questions' ? '#f6d55c' : '#5f6368',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'

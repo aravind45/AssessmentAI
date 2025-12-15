@@ -48,7 +48,7 @@ const Home = () => {
   return (
     <div style={{ 
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #f6d55c 0%, #f093fb 100%)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -97,9 +97,9 @@ const Home = () => {
               marginBottom: '24px',
               lineHeight: '1.1'
             }}>
-              Turn <span style={{ color: '#ff6b6b' }}>knowledge</span> into
+              Turn <span style={{ color: '#ff8a65' }}>Excel sheets</span> into
               <br />
-              <span style={{ color: '#4ecdc4' }}>assessments</span> in seconds
+              <span style={{ color: '#4db6ac' }}>assessments</span> in seconds
             </h1>
             
             <p style={{ 
@@ -108,7 +108,7 @@ const Home = () => {
               marginBottom: '40px',
               lineHeight: '1.6'
             }}>
-              Advanced AI analyzes your material and creates personalized assessments with detailed explanations
+              Upload your Excel files with questions and answers to create personalized assessments with detailed explanations
             </p>
 
             {/* Upload Area */}
@@ -128,7 +128,7 @@ const Home = () => {
                 fontSize: '18px',
                 marginBottom: '16px'
               }}>
-                Drag and drop a PDF, presentation, or Word file
+                Drag and drop an Excel file (.xlsx or .xls)
               </p>
               <Link 
                 to="/questions"
@@ -152,14 +152,14 @@ const Home = () => {
                   e.target.style.background = 'rgba(255, 255, 255, 0.2)'
                 }}
               >
-                Select file
+                Select Excel file
               </Link>
               <p style={{ 
                 color: 'rgba(255, 255, 255, 0.6)', 
                 fontSize: '14px',
                 marginTop: '12px'
               }}>
-                PDF up to 50MB • Presentations and Word up to 20MB
+                Excel files up to 10MB • .xlsx and .xls formats supported
               </p>
             </div>
 
@@ -173,7 +173,7 @@ const Home = () => {
                 <div style={{ 
                   fontSize: '32px', 
                   fontWeight: '700', 
-                  color: '#4ecdc4' 
+                  color: '#4db6ac' 
                 }}>
                   {totalQuestions || '150+'}
                 </div>
@@ -188,7 +188,7 @@ const Home = () => {
                 <div style={{ 
                   fontSize: '32px', 
                   fontWeight: '700', 
-                  color: '#ff6b6b' 
+                  color: '#ff8a65' 
                 }}>
                   12
                 </div>
@@ -203,15 +203,15 @@ const Home = () => {
                 <div style={{ 
                   fontSize: '32px', 
                   fontWeight: '700', 
-                  color: '#45b7d1' 
+                  color: '#ffb74d' 
                 }}>
-                  AI
+                  Excel
                 </div>
                 <div style={{ 
                   fontSize: '14px', 
                   color: 'rgba(255, 255, 255, 0.7)' 
                 }}>
-                  Powered
+                  Based
                 </div>
               </div>
             </div>
@@ -242,14 +242,14 @@ const Home = () => {
               <div style={{
                 width: '120px',
                 height: '120px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #f6d55c 0%, #f093fb 100%)',
                 borderRadius: '50%',
                 marginBottom: '20px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <Brain size={60} color="white" />
+                <FileText size={60} color="white" />
               </div>
 
               {/* Floating elements */}
@@ -257,28 +257,28 @@ const Home = () => {
                 position: 'absolute',
                 top: '20px',
                 right: '20px',
-                background: 'rgba(255, 107, 107, 0.9)',
+                background: 'rgba(255, 138, 101, 0.9)',
                 borderRadius: '12px',
                 padding: '8px 12px',
                 color: 'white',
                 fontSize: '12px',
                 fontWeight: '600'
               }}>
-                Quiz Generated!
+                Assessment Ready!
               </div>
 
               <div style={{
                 position: 'absolute',
                 bottom: '20px',
                 left: '20px',
-                background: 'rgba(78, 205, 196, 0.9)',
+                background: 'rgba(77, 182, 172, 0.9)',
                 borderRadius: '12px',
                 padding: '8px 12px',
                 color: 'white',
                 fontSize: '12px',
                 fontWeight: '600'
               }}>
-                AI Analysis
+                Excel Processed
               </div>
 
               {/* Document icons */}
@@ -291,7 +291,7 @@ const Home = () => {
                 padding: '12px',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
               }}>
-                <FileText size={24} color="#667eea" />
+                <FileText size={24} color="#f6d55c" />
               </div>
 
               <div style={{
@@ -303,7 +303,7 @@ const Home = () => {
                 padding: '12px',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
               }}>
-                <Sparkles size={24} color="#ff6b6b" />
+                <Sparkles size={24} color="#ff8a65" />
               </div>
             </div>
           </div>
@@ -358,7 +358,7 @@ const Home = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #4285f4, #34a853)',
+                  background: 'linear-gradient(135deg, #f6d55c, #4db6ac)',
                   borderRadius: '8px',
                   padding: '8px'
                 }}>
@@ -410,7 +410,7 @@ const Home = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #9c27b0, #e91e63)',
+                  background: 'linear-gradient(135deg, #ffb74d, #ff8a65)',
                   borderRadius: '8px',
                   padding: '8px'
                 }}>
@@ -462,7 +462,7 @@ const Home = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #ff5722, #ff9800)',
+                  background: 'linear-gradient(135deg, #4db6ac, #26a69a)',
                   borderRadius: '8px',
                   padding: '8px'
                 }}>

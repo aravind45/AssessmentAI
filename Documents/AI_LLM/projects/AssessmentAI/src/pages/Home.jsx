@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Code, Database, Globe, Users, Brain, Layers, Zap } from 'lucide-react'
+import { Upload, FileText, Brain, Sparkles, ArrowRight, Play, Users, Globe } from 'lucide-react'
 import { questionManager } from '../utils/questionManager'
 
 const Home = () => {
@@ -43,247 +43,480 @@ const Home = () => {
     }
   }, [])
 
-  const assessmentTypes = [
-    {
-      id: 'coding',
-      title: 'Programming Skills',
-      description: 'Test your coding abilities with algorithmic problems',
-      icon: <Code size={48} />,
-      color: '#4285f4',
-      baseDuration: 3, // minutes per question
-      baseQuestions: 9
-    },
-    {
-      id: 'system-design',
-      title: 'System Design',
-      description: 'Learn to design scalable systems and architecture',
-      icon: <Database size={48} />,
-      color: '#34a853',
-      baseDuration: 5,
-      baseQuestions: 3
-    },
-    {
-      id: 'frontend',
-      title: 'Frontend Development',
-      description: 'Master HTML, CSS, JavaScript, and React concepts',
-      icon: <Globe size={48} />,
-      color: '#fbbc04',
-      baseDuration: 3,
-      baseQuestions: 3
-    },
-    {
-      id: 'behavioral',
-      title: 'Behavioral Assessment',
-      description: 'Leadership, teamwork, and problem-solving scenarios',
-      icon: <Users size={48} />,
-      color: '#ea4335',
-      baseDuration: 5,
-      baseQuestions: 2
-    },
-    {
-      id: 'personality',
-      title: 'Personality Assessment',
-      description: 'Work style preferences and behavioral tendencies',
-      icon: <Users size={48} />,
-      color: '#9c27b0',
-      baseDuration: 0.5,
-      baseQuestions: 50
-    },
-    {
-      id: 'ai-business-analyst',
-      title: 'AI Business Analysis',
-      description: 'AI training, data quality, and business analysis skills',
-      icon: <Brain size={48} />,
-      color: '#673ab7',
-      baseDuration: 5,
-      baseQuestions: 1
-    },
-    {
-      id: 'ai-solution-architect',
-      title: 'AI Solution Architecture',
-      description: 'Advanced AI platform architecture and design patterns',
-      icon: <Layers size={48} />,
-      color: '#3f51b5',
-      baseDuration: 5,
-      baseQuestions: 1
-    },
-    {
-      id: 'microservices',
-      title: 'Microservices Architecture',
-      description: 'Service decomposition, communication, and distributed systems',
-      icon: <Layers size={48} />,
-      color: '#00bcd4',
-      baseDuration: 4,
-      baseQuestions: 10
-    },
-    {
-      id: 'event-driven-architecture',
-      title: 'Event-Driven Architecture',
-      description: 'Event sourcing, CQRS, sagas, and event streaming',
-      icon: <Database size={48} />,
-      color: '#ff5722',
-      baseDuration: 4,
-      baseQuestions: 10
-    },
-    {
-      id: 'serverless-architecture',
-      title: 'Serverless Architecture',
-      description: 'Functions, event triggers, and serverless patterns',
-      icon: <Globe size={48} />,
-      color: '#795548',
-      baseDuration: 3,
-      baseQuestions: 10
-    },
-    {
-      id: 'full-stack-development',
-      title: 'Full-Stack Development',
-      description: 'End-to-end application development and architecture',
-      icon: <Code size={48} />,
-      color: '#607d8b',
-      baseDuration: 3,
-      baseQuestions: 10
-    },
-    {
-      id: 'ap-physics-10th',
-      title: 'AP Physics (10th Grade)',
-      description: 'Mechanics, electricity, magnetism, waves, and thermodynamics',
-      icon: <Zap size={48} />,
-      color: '#e91e63',
-      baseDuration: 2,
-      baseQuestions: 20
-    }
-  ].map(assessment => {
-    const actualQuestions = questionCounts[assessment.id] || assessment.baseQuestions
-    const duration = Math.ceil(actualQuestions * assessment.baseDuration)
-    
-    return {
-      ...assessment,
-      questions: actualQuestions,
-      duration: `${duration} minute${duration !== 1 ? 's' : ''}`
-    }
-  })
+  const totalQuestions = Object.values(questionCounts).reduce((sum, count) => sum + count, 0)
 
   return (
-    <div className="container" style={{ padding: '40px 20px' }}>
-      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <h1 style={{ 
-          fontSize: '48px', 
-          fontWeight: '400', 
-          color: '#202124',
-          marginBottom: '16px'
-        }}>
-          Master Your Skills with Assessments
-        </h1>
-        <p style={{ 
-          fontSize: '20px', 
-          color: '#5f6368',
-          maxWidth: '600px',
-          margin: '0 auto'
-        }}>
-          Practice with comprehensive assessments and improve your knowledge 
-          across various subjects and skills.
-        </p>
-      </div>
+    <div style={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Background decorative elements */}
+      <div style={{
+        position: 'absolute',
+        top: '10%',
+        right: '10%',
+        width: '200px',
+        height: '200px',
+        borderRadius: '50%',
+        background: 'rgba(255, 255, 255, 0.1)',
+        filter: 'blur(40px)'
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        left: '5%',
+        width: '150px',
+        height: '150px',
+        borderRadius: '50%',
+        background: 'rgba(255, 255, 255, 0.08)',
+        filter: 'blur(30px)'
+      }} />
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px',
-        marginBottom: '48px'
+      <div className="container" style={{ 
+        padding: '60px 20px',
+        position: 'relative',
+        zIndex: 1
       }}>
-        {assessmentTypes.map((assessment) => (
-          <div key={assessment.id} className="card">
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              marginBottom: '16px' 
+        {/* Hero Section */}
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+          gap: '60px',
+          alignItems: 'center',
+          marginBottom: '80px',
+          minHeight: '70vh'
+        }}>
+          {/* Left Content */}
+          <div>
+            <h1 style={{ 
+              fontSize: '56px', 
+              fontWeight: '700', 
+              color: 'white',
+              marginBottom: '24px',
+              lineHeight: '1.1'
             }}>
-              <div style={{ color: assessment.color, marginRight: '16px' }}>
-                {assessment.icon}
-              </div>
-              <h3 style={{ fontSize: '24px', fontWeight: '500' }}>
-                {assessment.title}
-              </h3>
-            </div>
+              Turn <span style={{ color: '#ff6b6b' }}>knowledge</span> into
+              <br />
+              <span style={{ color: '#4ecdc4' }}>assessments</span> in seconds
+            </h1>
             
             <p style={{ 
-              color: '#5f6368', 
-              marginBottom: '20px',
-              lineHeight: '1.5'
+              fontSize: '20px', 
+              color: 'rgba(255, 255, 255, 0.8)',
+              marginBottom: '40px',
+              lineHeight: '1.6'
             }}>
-              {assessment.description}
+              Advanced AI analyzes your material and creates personalized assessments with detailed explanations
             </p>
-            
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              marginBottom: '24px',
-              fontSize: '14px',
-              color: '#5f6368'
+
+            {/* Upload Area */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '2px dashed rgba(255, 255, 255, 0.3)',
+              borderRadius: '16px',
+              padding: '40px',
+              textAlign: 'center',
+              marginBottom: '32px',
+              transition: 'all 0.3s ease'
             }}>
-              <span>⏱️ {assessment.duration}</span>
-              <span>📝 {assessment.questions} questions</span>
+              <Upload size={48} color="white" style={{ marginBottom: '16px' }} />
+              <p style={{ 
+                color: 'white', 
+                fontSize: '18px',
+                marginBottom: '16px'
+              }}>
+                Drag and drop a PDF, presentation, or Word file
+              </p>
+              <Link 
+                to="/questions"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.2)'
+                }}
+              >
+                Select file
+              </Link>
+              <p style={{ 
+                color: 'rgba(255, 255, 255, 0.6)', 
+                fontSize: '14px',
+                marginTop: '12px'
+              }}>
+                PDF up to 50MB • Presentations and Word up to 20MB
+              </p>
             </div>
-            
+
+            {/* Quick Stats */}
+            <div style={{
+              display: 'flex',
+              gap: '32px',
+              alignItems: 'center'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: '32px', 
+                  fontWeight: '700', 
+                  color: '#4ecdc4' 
+                }}>
+                  {totalQuestions || '150+'}
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: 'rgba(255, 255, 255, 0.7)' 
+                }}>
+                  Questions Available
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: '32px', 
+                  fontWeight: '700', 
+                  color: '#ff6b6b' 
+                }}>
+                  12
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: 'rgba(255, 255, 255, 0.7)' 
+                }}>
+                  Assessment Types
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: '32px', 
+                  fontWeight: '700', 
+                  color: '#45b7d1' 
+                }}>
+                  AI
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: 'rgba(255, 255, 255, 0.7)' 
+                }}>
+                  Powered
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Illustration */}
+          <div style={{ 
+            position: 'relative',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            {/* Main illustration container */}
+            <div style={{
+              width: '400px',
+              height: '400px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              {/* Person silhouette */}
+              <div style={{
+                width: '120px',
+                height: '120px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '50%',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Brain size={60} color="white" />
+              </div>
+
+              {/* Floating elements */}
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(255, 107, 107, 0.9)',
+                borderRadius: '12px',
+                padding: '8px 12px',
+                color: 'white',
+                fontSize: '12px',
+                fontWeight: '600'
+              }}>
+                Quiz Generated!
+              </div>
+
+              <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '20px',
+                background: 'rgba(78, 205, 196, 0.9)',
+                borderRadius: '12px',
+                padding: '8px 12px',
+                color: 'white',
+                fontSize: '12px',
+                fontWeight: '600'
+              }}>
+                AI Analysis
+              </div>
+
+              {/* Document icons */}
+              <div style={{
+                position: 'absolute',
+                top: '50px',
+                left: '-20px',
+                background: 'white',
+                borderRadius: '8px',
+                padding: '12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+              }}>
+                <FileText size={24} color="#667eea" />
+              </div>
+
+              <div style={{
+                position: 'absolute',
+                bottom: '80px',
+                right: '-20px',
+                background: 'white',
+                borderRadius: '8px',
+                padding: '12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+              }}>
+                <Sparkles size={24} color="#ff6b6b" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Access Section */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '20px',
+          padding: '40px',
+          marginBottom: '60px',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          <h2 style={{ 
+            fontSize: '32px', 
+            fontWeight: '600', 
+            color: 'white',
+            textAlign: 'center',
+            marginBottom: '40px'
+          }}>
+            Quick Start Options
+          </h2>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '24px'
+          }}>
+            {/* Programming Skills */}
             <Link 
-              to={`/assessment/${assessment.id}`}
-              className="btn btn-primary"
-              style={{ width: '100%' }}
+              to="/assessment/coding"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                padding: '24px',
+                textDecoration: 'none',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                transition: 'all 0.3s ease',
+                display: 'block'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-4px)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)'
+              }}
             >
-              Start Assessment
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #4285f4, #34a853)',
+                  borderRadius: '8px',
+                  padding: '8px'
+                }}>
+                  <Play size={20} color="white" />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>Programming Skills</h3>
+              </div>
+              <p style={{ 
+                fontSize: '14px', 
+                color: 'rgba(255, 255, 255, 0.8)',
+                margin: '0 0 12px 0'
+              }}>
+                Test your coding abilities with algorithmic problems
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.6)'
+              }}>
+                <span>{questionCounts.coding || 9} questions</span>
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+
+            {/* Personality Assessment */}
+            <Link 
+              to="/assessment/personality"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                padding: '24px',
+                textDecoration: 'none',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                transition: 'all 0.3s ease',
+                display: 'block'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-4px)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #9c27b0, #e91e63)',
+                  borderRadius: '8px',
+                  padding: '8px'
+                }}>
+                  <Users size={20} color="white" />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>Personality Assessment</h3>
+              </div>
+              <p style={{ 
+                fontSize: '14px', 
+                color: 'rgba(255, 255, 255, 0.8)',
+                margin: '0 0 12px 0'
+              }}>
+                Discover your behavioral tendencies and work style
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.6)'
+              }}>
+                <span>{questionCounts.personality || 50} questions</span>
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+
+            {/* AP Physics */}
+            <Link 
+              to="/assessment/ap-physics-10th"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                padding: '24px',
+                textDecoration: 'none',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                transition: 'all 0.3s ease',
+                display: 'block'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-4px)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #ff5722, #ff9800)',
+                  borderRadius: '8px',
+                  padding: '8px'
+                }}>
+                  <Globe size={20} color="white" />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>AP Physics</h3>
+              </div>
+              <p style={{ 
+                fontSize: '14px', 
+                color: 'rgba(255, 255, 255, 0.8)',
+                margin: '0 0 12px 0'
+              }}>
+                Master physics concepts with comprehensive problems
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.6)'
+              }}>
+                <span>{questionCounts['ap-physics-10th'] || 20} questions</span>
+                <ArrowRight size={16} />
+              </div>
             </Link>
           </div>
-        ))}
-      </div>
 
-      <div className="card" style={{ textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '16px', color: '#202124' }}>
-          How It Works
-        </h2>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '32px',
-          marginTop: '32px'
-        }}>
-          <div>
-            <div style={{ 
-              fontSize: '32px', 
-              marginBottom: '12px',
-              color: '#4285f4'
-            }}>
-              1️⃣
-            </div>
-            <h3>Choose Assessment</h3>
-            <p style={{ color: '#5f6368' }}>
-              Select the type of assessment that matches your learning goals
-            </p>
-          </div>
-          <div>
-            <div style={{ 
-              fontSize: '32px', 
-              marginBottom: '12px',
-              color: '#34a853'
-            }}>
-              2️⃣
-            </div>
-            <h3>Complete Questions</h3>
-            <p style={{ color: '#5f6368' }}>
-              Work through realistic problems within the time limit
-            </p>
-          </div>
-          <div>
-            <div style={{ 
-              fontSize: '32px', 
-              marginBottom: '12px',
-              color: '#fbbc04'
-            }}>
-              3️⃣
-            </div>
-            <h3>Get Feedback</h3>
-            <p style={{ color: '#5f6368' }}>
-              Receive detailed results and improvement suggestions
-            </p>
+          {/* View All Button */}
+          <div style={{ textAlign: 'center', marginTop: '32px' }}>
+            <Link 
+              to="/assessments"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontSize: '16px',
+                fontWeight: '500',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              View All Assessments
+              <ArrowRight size={16} />
+            </Link>
           </div>
         </div>
       </div>

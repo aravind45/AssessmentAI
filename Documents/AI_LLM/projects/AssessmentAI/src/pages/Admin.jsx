@@ -14,6 +14,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
+  const [selectedAssessments, setSelectedAssessments] = useState(new Set())
 
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -107,13 +108,12 @@ const Admin = () => {
           *,
           profiles!custom_assessment_types_user_id_fkey(full_name, email)
         `)
-        .eq('is_public', true)
         .order('created_at', { ascending: false })
 
       if (error) throw error
       setPublicAssessments(data || [])
     } catch (error) {
-      console.error('Error loading public assessments:', error)
+      console.error('Error loading assessments:', error)
     }
   }
 
@@ -144,12 +144,13 @@ const Admin = () => {
 
       if (error) throw error
       
-      // Reload public assessments
+      // Reload assessments
       await loadPublicAssessments()
       
-      alert(`Assessment visibility ${!currentVisibility ? 'enabled' : 'disabled'} successfully!`)
+      const action = !currentVisibility ? 'made public' : 'made private'
+      alert(`✅ Assessment ${action} successfully!`)
     } catch (error) {
-      alert(`Error updating assessment: ${error.message}`)
+      alert(`❌ Error updating assessment: ${error.message}`)
     }
   }
 
@@ -166,12 +167,78 @@ const Admin = () => {
 
       if (error) throw error
       
-      // Reload public assessments
+      // Reload assessments
       await loadPublicAssessments()
       
-      alert(`Assessment "${assessmentName}" deleted successfully!`)
+      alert(`✅ Assessment "${assessmentName}" deleted successfully!`)
     } catch (error) {
-      alert(`Error deleting assessment: ${error.message}`)
+      alert(`❌ Error deleting assessment: ${error.message}`)
+    }
+  }
+
+  const handleBulkMakePublic = async () => {
+    if (selectedAssessments.size === 0) return
+    
+    if (!window.confirm(`Make ${selectedAssessments.size} selected assessments public?`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('custom_assessment_types')
+        .update({ is_public: true })
+        .in('id', Array.from(selectedAssessments))
+
+      if (error) throw error
+      
+      await loadPublicAssessments()
+      setSelectedAssessments(new Set())
+      
+      alert(`✅ ${selectedAssessments.size} assessments made public successfully!`)
+    } catch (error) {
+      alert(`❌ Error updating assessments: ${error.message}`)
+    }
+  }
+
+  const handleBulkMakePrivate = async () => {
+    if (selectedAssessments.size === 0) return
+    
+    if (!window.confirm(`Make ${selectedAssessments.size} selected assessments private?`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('custom_assessment_types')
+        .update({ is_public: false })
+        .in('id', Array.from(selectedAssessments))
+
+      if (error) throw error
+      
+      await loadPublicAssessments()
+      setSelectedAssessments(new Set())
+      
+      alert(`✅ ${selectedAssessments.size} assessments made private successfully!`)
+    } catch (error) {
+      alert(`❌ Error updating assessments: ${error.message}`)
+    }
+  }
+
+  const handleSelectAssessment = (assessmentId, isSelected) => {
+    const newSelected = new Set(selectedAssessments)
+    if (isSelected) {
+      newSelected.add(assessmentId)
+    } else {
+      newSelected.delete(assessmentId)
+    }
+    setSelectedAssessments(newSelected)
+  }
+
+  const handleSelectAllAssessments = (isSelected) => {
+    if (isSelected) {
+      setSelectedAssessments(new Set(publicAssessments.map(a => a.id)))
+    } else {
+      setSelectedAssessments(new Set())
     }
   }
 
@@ -247,7 +314,7 @@ const Admin = () => {
         {[
           { id: 'overview', label: 'Overview', icon: BarChart3 },
           { id: 'users', label: 'Users', icon: Users },
-          { id: 'assessments', label: 'Public Assessments', icon: FileText },
+          { id: 'assessments', label: 'All Assessments', icon: FileText },
           { id: 'activity', label: 'Recent Activity', icon: Database }
         ].map(tab => {
           const IconComponent = tab.icon
@@ -361,16 +428,76 @@ const Admin = () => {
         </div>
       )}
 
-      {/* Public Assessments Tab */}
+      {/* All Assessments Tab */}
       {activeTab === 'assessments' && (
         <div className="card">
-          <h2 style={{ marginBottom: '24px' }}>Public Assessments</h2>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '24px'
+          }}>
+            <h2 style={{ margin: 0 }}>All Custom Assessments</h2>
+            
+            {selectedAssessments.size > 0 && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handleBulkMakePublic}
+                  style={{
+                    background: '#e8f5e8',
+                    border: '1px solid #4caf50',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    color: '#137333',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Eye size={14} />
+                  Make Public ({selectedAssessments.size})
+                </button>
+                <button
+                  onClick={handleBulkMakePrivate}
+                  style={{
+                    background: '#fff3cd',
+                    border: '1px solid #ffc107',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    color: '#856404',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <EyeOff size={14} />
+                  Make Private ({selectedAssessments.size})
+                </button>
+              </div>
+            )}
+          </div>
+          
           <div style={{ overflow: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e0e0e0' }}>
+                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600', width: '50px' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedAssessments.size === publicAssessments.length && publicAssessments.length > 0}
+                      onChange={(e) => handleSelectAllAssessments(e.target.checked)}
+                      style={{ transform: 'scale(1.2)' }}
+                    />
+                  </th>
                   <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>Assessment</th>
                   <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>Creator</th>
+                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Status</th>
                   <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Created</th>
                   <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Actions</th>
                 </tr>
@@ -378,6 +505,14 @@ const Admin = () => {
               <tbody>
                 {publicAssessments.map(assessment => (
                   <tr key={assessment.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedAssessments.has(assessment.id)}
+                        onChange={(e) => handleSelectAssessment(assessment.id, e.target.checked)}
+                        style={{ transform: 'scale(1.2)' }}
+                      />
+                    </td>
                     <td style={{ padding: '12px' }}>
                       <div>
                         <div style={{ fontWeight: '500' }}>{assessment.name}</div>
@@ -397,6 +532,18 @@ const Admin = () => {
                       </div>
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
+                      <span style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        background: assessment.is_public ? '#e8f5e8' : '#fff3cd',
+                        color: assessment.is_public ? '#137333' : '#856404'
+                      }}>
+                        {assessment.is_public ? '🌐 PUBLIC' : '🔒 PRIVATE'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
                       {formatDate(assessment.created_at)}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
@@ -404,32 +551,51 @@ const Admin = () => {
                         <button
                           onClick={() => toggleAssessmentVisibility(assessment.id, assessment.is_public)}
                           style={{
-                            background: 'none',
-                            border: '1px solid #ddd',
+                            background: assessment.is_public ? '#fff3cd' : '#e8f5e8',
+                            border: `1px solid ${assessment.is_public ? '#ffc107' : '#4caf50'}`,
                             borderRadius: '4px',
-                            padding: '4px 8px',
+                            padding: '6px 12px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '4px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            color: assessment.is_public ? '#856404' : '#137333'
                           }}
                           title={assessment.is_public ? 'Make Private' : 'Make Public'}
                         >
-                          {assessment.is_public ? <EyeOff size={14} /> : <Eye size={14} />}
+                          {assessment.is_public ? (
+                            <>
+                              <EyeOff size={14} />
+                              Make Private
+                            </>
+                          ) : (
+                            <>
+                              <Eye size={14} />
+                              Make Public
+                            </>
+                          )}
                         </button>
                         <button
                           onClick={() => deleteAssessment(assessment.id, assessment.name)}
                           style={{
-                            background: 'none',
+                            background: '#fce8e6',
                             border: '1px solid #f44336',
                             borderRadius: '4px',
-                            padding: '4px 8px',
+                            padding: '6px 12px',
                             cursor: 'pointer',
-                            color: '#f44336'
+                            color: '#f44336',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
                           }}
                           title="Delete Assessment"
                         >
                           <Trash2 size={14} />
+                          Delete
                         </button>
                       </div>
                     </td>

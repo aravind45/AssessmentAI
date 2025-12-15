@@ -1,7 +1,8 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Brain, Settings, LogOut, User, BarChart3 } from 'lucide-react'
+import { Brain, Settings, LogOut, User, BarChart3, Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { isAdmin } from '../config/admin'
 
 const Header = () => {
   const location = useLocation()
@@ -90,6 +91,19 @@ const Header = () => {
                   >
                     Manage Questions
                   </Link>
+                  {isAdmin(user?.id) && (
+                    <Link 
+                      to="/admin"
+                      style={{
+                        color: '#666',
+                        textDecoration: 'none',
+                        fontSize: '16px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Admin
+                    </Link>
+                  )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ 
                       display: 'flex', 
@@ -226,6 +240,21 @@ const Header = () => {
                   <Settings size={16} />
                   Manage Questions
                 </Link>
+                {isAdmin(user?.id) && (
+                  <Link 
+                    to="/admin" 
+                    className="btn btn-secondary"
+                    style={{
+                      color: location.pathname === '/admin' ? '#f6d55c' : '#5f6368',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <Shield size={16} />
+                    Admin
+                  </Link>
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{ 
                     display: 'flex', 

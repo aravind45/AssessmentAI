@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Trash2, Download, BarChart3, Plus, FileText, Brain, Code, Users, Globe, Layers, Zap, Database, Settings, BookOpen } from 'lucide-react'
+import { ArrowLeft, Trash2, Download, BarChart3, Plus, FileText, Brain, Code, Users, Globe, Layers, Zap, Database, Settings, BookOpen, Edit2 } from 'lucide-react'
 import QuestionUpload from '../components/QuestionUpload'
 import CreateAssessmentType from '../components/CreateAssessmentType'
+import EditAssessmentType from '../components/EditAssessmentType'
 import { questionManager } from '../utils/questionManager'
 import { assessmentTypesService } from '../services/database'
 import { useAuth } from '../contexts/AuthContext'
@@ -16,6 +17,7 @@ const QuestionManagerPage = () => {
   const [selectedQuestions, setSelectedQuestions] = useState(new Set())
   const [customAssessmentTypes, setCustomAssessmentTypes] = useState([])
   const [showCreateAssessment, setShowCreateAssessment] = useState(false)
+  const [editingAssessment, setEditingAssessment] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const { user } = useAuth()
@@ -176,6 +178,48 @@ const QuestionManagerPage = () => {
     alert(`✅ Successfully created "${newAssessment.name}" assessment!`)
   }
 
+  const handleAssessmentUpdated = (updatedAssessment) => {
+    // Reload custom assessment types
+    loadCustomAssessmentTypes()
+    // Show success message
+    alert(`✅ Successfully updated "${updatedAssessment.name}" assessment!`)
+  }
+
+  const handleEditAssessment = (assessment) => {
+    setEditingAssessment(assessment)
+  }
+
+  const handleDeleteAssessment = async (assessment) => {
+    const confirmMessage = `⚠️ DELETE CUSTOM ASSESSMENT?\n\n` +
+      `Assessment: ${assessment.name}\n\n` +
+      `This will also delete all questions associated with this assessment.\n` +
+      `This action cannot be undone!\n\n` +
+      `Are you sure you want to proceed?`
+    
+    if (window.confirm(confirmMessage)) {
+      try {
+        const { error } = await assessmentTypesService.deleteAssessmentType(user.id, assessment.id)
+        
+        if (error) {
+          alert(`❌ Error deleting assessment: ${error.message}`)
+        } else {
+          // If we're currently viewing this assessment, switch to a default one
+          if (selectedAssessment === assessment.id) {
+            setSelectedAssessment('coding')
+          }
+          
+          // Reload the list
+          loadCustomAssessmentTypes()
+          updateStats()
+          
+          alert(`✅ Successfully deleted "${assessment.name}" assessment!`)
+        }
+      } catch (error) {
+        alert(`❌ Error deleting assessment: ${error.message}`)
+      }
+    }
+  }
+
   const handleExportQuestions = () => {
     try {
       const questions = questionManager.exportCustomQuestions(selectedAssessment)
@@ -289,59 +333,111 @@ const QuestionManagerPage = () => {
           {assessmentTypes.map(type => {
             const IconComponent = type.isCustom ? getIconComponent(type.icon) : null
             return (
-              <button
-                key={type.id}
-                onClick={() => setSelectedAssessment(type.id)}
-                className={`btn ${selectedAssessment === type.id ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ 
-                  textAlign: 'left',
-                  padding: '12px 16px',
-                  background: selectedAssessment === type.id 
-                    ? (type.isCustom ? type.color : '#4285f4')
-                    : 'white',
-                  borderColor: selectedAssessment === type.id 
-                    ? (type.isCustom ? type.color : '#4285f4')
-                    : '#e0e0e0',
-                  color: selectedAssessment === type.id ? 'white' : '#333'
-                }}
-              >
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  marginBottom: type.isCustom ? '4px' : '0'
-                }}>
-                  {type.isCustom && IconComponent && (
-                    <IconComponent size={16} />
-                  )}
-                  <div style={{ fontWeight: '500' }}>{type.name}</div>
-                  {type.isCustom && (
-                    <span style={{ 
-                      fontSize: '10px', 
-                      background: 'rgba(255,255,255,0.2)',
-                      padding: '2px 6px',
-                      borderRadius: '4px'
-                    }}>
-                      CUSTOM
-                    </span>
-                  )}
-                </div>
-                {type.isCustom && type.description && (
+              <div key={type.id} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setSelectedAssessment(type.id)}
+                  className={`btn ${selectedAssessment === type.id ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ 
+                    textAlign: 'left',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: selectedAssessment === type.id 
+                      ? (type.isCustom ? type.color : '#4285f4')
+                      : 'white',
+                    borderColor: selectedAssessment === type.id 
+                      ? (type.isCustom ? type.color : '#4285f4')
+                      : '#e0e0e0',
+                    color: selectedAssessment === type.id ? 'white' : '#333'
+                  }}
+                >
                   <div style={{ 
-                    fontSize: '11px', 
-                    opacity: 0.9,
-                    marginBottom: '4px'
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    marginBottom: type.isCustom ? '4px' : '0'
                   }}>
-                    {type.description}
+                    {type.isCustom && IconComponent && (
+                      <IconComponent size={16} />
+                    )}
+                    <div style={{ fontWeight: '500', flex: 1 }}>{type.name}</div>
+                    {type.isCustom && (
+                      <span style={{ 
+                        fontSize: '10px', 
+                        background: 'rgba(255,255,255,0.2)',
+                        padding: '2px 6px',
+                        borderRadius: '4px'
+                      }}>
+                        {type.is_public ? '🌐 PUBLIC' : '🔒 PRIVATE'}
+                      </span>
+                    )}
+                  </div>
+                  {type.isCustom && type.description && (
+                    <div style={{ 
+                      fontSize: '11px', 
+                      opacity: 0.9,
+                      marginBottom: '4px'
+                    }}>
+                      {type.description}
+                    </div>
+                  )}
+                  {questionStats[type.id] && (
+                    <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                      {questionStats[type.id].total} questions 
+                      ({questionStats[type.id].custom} custom)
+                    </div>
+                  )}
+                </button>
+                
+                {/* Edit/Delete buttons for custom assessments */}
+                {type.isCustom && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    display: 'flex',
+                    gap: '4px'
+                  }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEditAssessment(type)
+                      }}
+                      style={{
+                        background: 'rgba(255,255,255,0.9)',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '4px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title="Edit Assessment"
+                    >
+                      <Edit2 size={12} color="#666" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteAssessment(type)
+                      }}
+                      style={{
+                        background: 'rgba(255,255,255,0.9)',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '4px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title="Delete Assessment"
+                    >
+                      <Trash2 size={12} color="#f44336" />
+                    </button>
                   </div>
                 )}
-                {questionStats[type.id] && (
-                  <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                    {questionStats[type.id].total} questions 
-                    ({questionStats[type.id].custom} custom)
-                  </div>
-                )}
-              </button>
+              </div>
             )
           })}
         </div>
@@ -763,6 +859,15 @@ const QuestionManagerPage = () => {
         <CreateAssessmentType
           onAssessmentCreated={handleAssessmentCreated}
           onClose={() => setShowCreateAssessment(false)}
+        />
+      )}
+
+      {/* Edit Assessment Type Modal */}
+      {editingAssessment && (
+        <EditAssessmentType
+          assessment={editingAssessment}
+          onAssessmentUpdated={handleAssessmentUpdated}
+          onClose={() => setEditingAssessment(null)}
         />
       )}
     </div>

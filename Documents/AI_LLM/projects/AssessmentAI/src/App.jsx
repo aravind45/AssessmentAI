@@ -9,6 +9,7 @@ import Results from './pages/Results'
 import QuestionManager from './pages/QuestionManager'
 import Assessments from './pages/Assessments'
 import Dashboard from './pages/Dashboard'
+import Admin from './pages/Admin'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -35,6 +36,11 @@ function App() {
               <Route path="/questions" element={
                 <ProtectedRoute>
                   <QuestionManager />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <Admin />
                 </ProtectedRoute>
               } />
               <Route path="/login" element={<Login />} />

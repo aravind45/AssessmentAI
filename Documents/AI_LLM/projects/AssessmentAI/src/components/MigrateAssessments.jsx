@@ -116,8 +116,8 @@ const MigrateAssessments = ({ onClose, onMigrationComplete }) => {
 
       for (const assessment of localAssessments) {
         try {
-          // Create assessment type in database
-          const { data: assessmentType, error: assessmentError } = await assessmentTypesService.createAssessmentType(user.id, {
+          // Use upsert to handle duplicates at database level
+          const { data: assessmentType, error: assessmentError } = await assessmentTypesService.upsertAssessmentType(user.id, {
             name: assessment.name,
             description: `Migrated from localStorage - ${assessment.questionCount} questions`,
             icon: getAssessmentIcon(assessment.type),
@@ -129,10 +129,24 @@ const MigrateAssessments = ({ onClose, onMigrationComplete }) => {
             throw assessmentError
           }
 
+          // Check if questions are already there
+          const { data: existingQuestions } = await questionsService.getUserQuestions(user.id, assessmentType.id)
+          
+          if (existingQuestions && existingQuestions.length > 0) {
+            results.successful++
+            results.details.push({
+              name: assessment.name,
+              status: 'success',
+              questionCount: assessment.questionCount,
+              note: 'Assessment already exists with questions'
+            })
+            continue
+          }
+
           // Add questions to database
           const { error: questionsError } = await questionsService.addQuestions(
             user.id,
-            assessmentType.id, // Use the new assessment type ID as assessment_type
+            assessmentType.id, // Use the assessment type ID as assessment_type
             assessment.questions,
             assessmentType.id // Use as custom_assessment_id
           )
@@ -145,7 +159,8 @@ const MigrateAssessments = ({ onClose, onMigrationComplete }) => {
           results.details.push({
             name: assessment.name,
             status: 'success',
-            questionCount: assessment.questionCount
+            questionCount: assessment.questionCount,
+            note: 'Questions migrated successfully'
           })
 
         } catch (error) {
@@ -250,6 +265,68 @@ const MigrateAssessments = ({ onClose, onMigrationComplete }) => {
           </div>
         )}
 
+        {/* Debug: Show existing assessments */}
+        <div style={{
+          background: '#f0f7ff',
+          border: '1px solid #2196f3',
+          borderRadius: '8px',
+          padding: '16px',
+          marginBottom: '24px'
+        }}>
+          <h4 style={{ margin: '0 0 12px 0', color: '#1976d2' }}>Debug: Current Database State</h4>
+          <button
+            onClick={async () => {
+              try {
+                const { data: existingTypes } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+                console.log('Existing assessment types:', existingTypes)
+                alert(`Found ${existingTypes?.length || 0} existing assessment types. Check console for details.`)
+              } catch (error) {
+                console.error('Error fetching assessments:', error)
+                alert(`Error: ${error.message}`)
+              }
+            }}
+            style={{
+              background: '#2196f3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              marginRight: '8px'
+            }}
+          >
+            Check Existing Assessments
+          </button>
+          
+          <button
+            onClick={async () => {
+              if (confirm('This will delete ALL your custom assessment types and questions. Are you sure?')) {
+                try {
+                  const { data: existingTypes } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+                  
+                  for (const type of existingTypes || []) {
+                    await assessmentTypesService.deleteAssessmentType(user.id, type.id)
+                  }
+                  
+                  alert('All assessments cleared. You can now try migration again.')
+                } catch (error) {
+                  alert(`Error clearing assessments: ${error.message}`)
+                }
+              }
+            }}
+            style={{
+              background: '#f44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '8px 16px',
+              cursor: 'pointer'
+            }}
+          >
+            Clear All Database Assessments
+          </button>
+        </div>
+
         {/* Migration Results */}
         {migrationResults && (
           <div style={{
@@ -286,6 +363,7 @@ const MigrateAssessments = ({ onClose, onMigrationComplete }) => {
                   {detail.status === 'success' && (
                     <div style={{ fontSize: '12px', color: '#666' }}>
                       {detail.questionCount} questions migrated
+                      {detail.note && <div style={{ fontStyle: 'italic' }}>({detail.note})</div>}
                     </div>
                   )}
                   {detail.status === 'error' && (

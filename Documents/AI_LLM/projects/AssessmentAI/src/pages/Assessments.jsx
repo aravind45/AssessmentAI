@@ -21,21 +21,13 @@ const Assessments = () => {
   }
 
   useEffect(() => {
-    // Get actual question counts including custom questions
+    // Get question counts for custom assessments only
     const updateCounts = () => {
       const counts = {}
-      const types = [
-        'coding', 'system-design', 'frontend', 'behavioral', 'personality', 
-        'ai-business-analyst', 'ai-solution-architect', 'microservices', 
-        'event-driven-architecture', 'serverless-architecture', 
-        'full-stack-development', 'ap-physics-10th'
-      ]
-      
-      types.forEach(type => {
-        const stats = questionManager.getQuestionStats(type)
-        counts[type] = stats.total
+      customAssessments.forEach(assessment => {
+        const stats = questionManager.getQuestionStats(assessment.id)
+        counts[assessment.id] = stats.total
       })
-      
       setQuestionCounts(counts)
     }
 
@@ -92,112 +84,19 @@ const Assessments = () => {
     }
   }
 
-  const assessmentTypes = [
-    {
-      id: 'coding',
-      title: 'Programming Skills',
-      description: 'Test your coding abilities with algorithmic problems',
-      icon: <Code size={48} />,
-      color: '#4285f4',
-      baseDuration: 3, // minutes per question
-      baseQuestions: 9
-    },
-    {
-      id: 'system-design',
-      title: 'System Design',
-      description: 'Learn to design scalable systems and architecture',
-      icon: <Database size={48} />,
-      color: '#34a853',
-      baseDuration: 5,
-      baseQuestions: 3
-    },
-    {
-      id: 'frontend',
-      title: 'Frontend Development',
-      description: 'Master HTML, CSS, JavaScript, and React concepts',
-      icon: <Globe size={48} />,
-      color: '#fbbc04',
-      baseDuration: 3,
-      baseQuestions: 3
-    },
-    {
-      id: 'behavioral',
-      title: 'Behavioral Assessment',
-      description: 'Leadership, teamwork, and problem-solving scenarios',
-      icon: <Users size={48} />,
-      color: '#ea4335',
-      baseDuration: 5,
-      baseQuestions: 2
-    },
-    {
-      id: 'personality',
-      title: 'Personality Assessment',
-      description: 'Work style preferences and behavioral tendencies',
-      icon: <Users size={48} />,
-      color: '#9c27b0',
-      baseDuration: 0.5,
-      baseQuestions: 50
-    },
-    {
-      id: 'ai-business-analyst',
-      title: 'AI Business Analysis',
-      description: 'AI training, data quality, and business analysis skills',
-      icon: <Brain size={48} />,
-      color: '#673ab7',
-      baseDuration: 5,
-      baseQuestions: 1
-    },
-    {
-      id: 'ai-solution-architect',
-      title: 'AI Solution Architecture',
-      description: 'Advanced AI platform architecture and design patterns',
-      icon: <Layers size={48} />,
-      color: '#3f51b5',
-      baseDuration: 5,
-      baseQuestions: 1
-    },
-    {
-      id: 'microservices',
-      title: 'Microservices Architecture',
-      description: 'Service decomposition, communication, and distributed systems',
-      icon: <Layers size={48} />,
-      color: '#00bcd4',
-      baseDuration: 4,
-      baseQuestions: 10
-    },
-    {
-      id: 'event-driven-architecture',
-      title: 'Event-Driven Architecture',
-      description: 'Event sourcing, CQRS, sagas, and event streaming',
-      icon: <Database size={48} />,
-      color: '#ff5722',
-      baseDuration: 4,
-      baseQuestions: 10
-    },
-    {
-      id: 'serverless-architecture',
-      title: 'Serverless Architecture',
-      description: 'Functions, event triggers, and serverless patterns',
-      icon: <Globe size={48} />,
-      color: '#795548',
-      baseDuration: 3,
-      baseQuestions: 10
-    },
-    {
-      id: 'full-stack-development',
-      title: 'Full-Stack Development',
-      description: 'End-to-end application development and architecture',
-      icon: <Code size={48} />,
-      color: '#607d8b',
-      baseDuration: 3,
-      baseQuestions: 10
-    },
-    {
-      id: 'ap-physics-10th',
-      title: 'AP Physics (10th Grade)',
-      description: 'Mechanics, electricity, magnetism, waves, and thermodynamics',
-      icon: <Zap size={48} />,
-      color: '#e91e63',
+  // Convert custom assessments to the format expected by the UI
+  const assessmentTypes = customAssessments.map(assessment => {
+    const IconComponent = getIconComponent(assessment.icon)
+    return {
+      id: assessment.id,
+      title: assessment.name,
+      description: assessment.description || 'Custom assessment',
+      icon: <IconComponent size={48} />,
+      color: assessment.color || '#f6d55c',
+      baseDuration: 3, // Default duration
+      baseQuestions: 10 // Default question count
+    }
+  })
       baseDuration: 2,
       baseQuestions: 20
     }

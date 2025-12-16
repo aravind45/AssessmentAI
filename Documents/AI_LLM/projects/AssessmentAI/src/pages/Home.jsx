@@ -21,21 +21,13 @@ const Home = () => {
   }
 
   useEffect(() => {
-    // Get actual question counts including custom questions
+    // Get question counts for custom assessments only
     const updateCounts = () => {
       const counts = {}
-      const types = [
-        'coding', 'system-design', 'frontend', 'behavioral', 'personality', 
-        'ai-business-analyst', 'ai-solution-architect', 'microservices', 
-        'event-driven-architecture', 'serverless-architecture', 
-        'full-stack-development', 'ap-physics-10th'
-      ]
-      
-      types.forEach(type => {
-        const stats = questionManager.getQuestionStats(type)
-        counts[type] = stats.total
+      customAssessments.forEach(assessment => {
+        const stats = questionManager.getQuestionStats(assessment.id)
+        counts[assessment.id] = stats.total
       })
-      
       setQuestionCounts(counts)
     }
 
@@ -253,101 +245,81 @@ const Home = () => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '24px'
           }}>
-            {/* Programming Skills */}
-            <Link 
-              to="/assessment/coding"
-              className="card"
-              style={{
-                textDecoration: 'none',
-                color: 'inherit',
-                transition: 'all 0.3s ease',
-                display: 'block'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <div style={{
-                  background: '#f6d55c',
-                  borderRadius: '8px',
-                  padding: '8px'
-                }}>
-                  <Play size={20} color="white" />
-                </div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>Programming Skills</h3>
-              </div>
-              <p style={{ 
-                fontSize: '14px', 
-                color: '#666',
-                margin: '0 0 12px 0'
-              }}>
-                Test your coding abilities with algorithmic problems
-              </p>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                fontSize: '12px',
-                color: '#999'
-              }}>
-                <span>{questionCounts.coding || 9} questions</span>
-                <ArrowRight size={16} />
-              </div>
-            </Link>
+            {/* Show only custom assessments */}
+            {customAssessments.map((assessment) => {
+              const IconComponent = getIconComponent(assessment.icon)
+              return (
+                <Link 
+                  key={assessment.id}
+                  to={`/assessment/${assessment.id}`}
+                  className="card"
+                  style={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    transition: 'all 0.3s ease',
+                    display: 'block'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{
+                      background: assessment.color || '#f6d55c',
+                      borderRadius: '8px',
+                      padding: '8px'
+                    }}>
+                      <IconComponent size={20} color="white" />
+                    </div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>{assessment.name}</h3>
+                  </div>
+                  <p style={{ 
+                    fontSize: '14px', 
+                    color: '#666',
+                    margin: '0 0 12px 0'
+                  }}>
+                    {assessment.description || 'Custom assessment'}
+                  </p>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    fontSize: '12px',
+                    color: '#999'
+                  }}>
+                    <span>Custom assessment</span>
+                    <ArrowRight size={16} />
+                  </div>
+                </Link>
+              )
+            })}
 
-            {/* Personality Assessment */}
-            <Link 
-              to="/assessment/personality"
-              className="card"
-              style={{
-                textDecoration: 'none',
-                color: 'inherit',
-                transition: 'all 0.3s ease',
-                display: 'block'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <div style={{
-                  background: '#ff8a65',
-                  borderRadius: '8px',
-                  padding: '8px'
-                }}>
-                  <Users size={20} color="white" />
-                </div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>Personality Assessment</h3>
-              </div>
-              <p style={{ 
-                fontSize: '14px', 
-                color: '#666',
-                margin: '0 0 12px 0'
+            {/* Show message if no custom assessments */}
+            {customAssessments.length === 0 && (
+              <div className="card" style={{
+                textAlign: 'center',
+                padding: '40px 20px',
+                gridColumn: '1 / -1'
               }}>
-                Discover your behavioral tendencies and work style
-              </p>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                fontSize: '12px',
-                color: '#999'
-              }}>
-                <span>{questionCounts.personality || 50} questions</span>
-                <ArrowRight size={16} />
+                <FileText size={48} style={{ color: '#ccc', marginBottom: '16px' }} />
+                <h3 style={{ color: '#666', marginBottom: '8px' }}>No Assessments Available</h3>
+                <p style={{ color: '#999', marginBottom: '20px' }}>
+                  {user ? 'Create your first custom assessment to get started.' : 'Please log in to view assessments.'}
+                </p>
+                {user && (
+                  <Link 
+                    to="/manage-questions" 
+                    style={{
+                      background: '#f6d55c',
+                      color: '#333',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Create Assessment
+                  </Link>
+                )}
               </div>
-            </Link>
-
-            {/* AP Physics */}
-            <Link 
-              to="/assessment/ap-physics-10th"
-              className="card"
-              style={{
-                textDecoration: 'none',
-                color: 'inherit',
-                transition: 'all 0.3s ease',
-                display: 'block'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <div style={{
-                  background: '#4db6ac',
-                  borderRadius: '8px',
+            )}
                   padding: '8px'
                 }}>
                   <Globe size={20} color="white" />

@@ -22,20 +22,8 @@ const QuestionManagerPage = () => {
 
   const { user } = useAuth()
 
-  const defaultAssessmentTypes = [
-    { id: 'coding', name: 'Programming Skills', isDefault: true },
-    { id: 'system-design', name: 'System Design', isDefault: true },
-    { id: 'frontend', name: 'Frontend Development', isDefault: true },
-    { id: 'behavioral', name: 'Behavioral Assessment', isDefault: true },
-    { id: 'personality', name: 'Personality Assessment', isDefault: true },
-    { id: 'ai-business-analyst', name: 'AI Business Analysis', isDefault: true },
-    { id: 'ai-solution-architect', name: 'AI Solution Architecture', isDefault: true },
-    { id: 'microservices', name: 'Microservices Architecture', isDefault: true },
-    { id: 'event-driven-architecture', name: 'Event-Driven Architecture', isDefault: true },
-    { id: 'serverless-architecture', name: 'Serverless Architecture', isDefault: true },
-    { id: 'full-stack-development', name: 'Full-Stack Development', isDefault: true },
-    { id: 'ap-physics-10th', name: 'AP Physics (10th Grade)', isDefault: true }
-  ]
+  // No default assessment types - only show custom ones
+  const defaultAssessmentTypes = []
 
   // Get icon component by name
   const getIconComponent = (iconName) => {

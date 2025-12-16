@@ -93,6 +93,41 @@ export const assessmentTypesService = {
       .eq('id', assessmentId)
     
     return { data, error }
+  },
+
+  async findOrCreateAssessmentType(userId, assessmentData) {
+    // First try to find existing
+    const { data: existingTypes } = await this.getUserAssessmentTypes(userId)
+    const existing = existingTypes?.find(type => type.name === assessmentData.name)
+    
+    if (existing) {
+      return { data: existing, error: null, created: false }
+    }
+    
+    // If not found, create new
+    const { data, error } = await this.createAssessmentType(userId, assessmentData)
+    return { data, error, created: !error }
+  },
+
+  async upsertAssessmentType(userId, assessmentData) {
+    // Use Supabase's upsert functionality
+    const { data, error } = await supabase
+      .from('custom_assessment_types')
+      .upsert([{
+        user_id: userId,
+        name: assessmentData.name,
+        description: assessmentData.description,
+        icon: assessmentData.icon || 'FileText',
+        color: assessmentData.color || '#f6d55c',
+        is_public: assessmentData.isPublic || false
+      }], {
+        onConflict: 'user_id,name',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single()
+    
+    return { data, error }
   }
 }
 

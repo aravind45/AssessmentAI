@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Clock, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react'
 import { questionManager } from '../utils/questionManager'
 import { assessmentTypesService } from '../services/database'
 import { useAuth } from '../contexts/AuthContext'
+import AIHintPanel from '../components/AIHintPanel'
 
 const Assessment = () => {
   const { type } = useParams()
@@ -14,6 +15,7 @@ const Assessment = () => {
   const [isStarted, setIsStarted] = useState(false)
   const [assessmentInfo, setAssessmentInfo] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showAIPanel, setShowAIPanel] = useState(false)
 
   const { user } = useAuth()
   const questions = questionManager.getQuestions(type) || []
@@ -246,6 +248,26 @@ const Assessment = () => {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            onClick={() => setShowAIPanel(!showAIPanel)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              background: showAIPanel ? '#f6d55c' : '#f8f9fa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#333'
+            }}
+          >
+            <HelpCircle size={16} />
+            AI Help
+          </button>
+          
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Clock size={20} />
             <span style={{ 
@@ -511,6 +533,13 @@ const Assessment = () => {
           )}
         </div>
       </div>
+
+      {/* AI Hint Panel */}
+      <AIHintPanel 
+        question={question}
+        isVisible={showAIPanel}
+        onToggle={() => setShowAIPanel(!showAIPanel)}
+      />
     </div>
   )
 }

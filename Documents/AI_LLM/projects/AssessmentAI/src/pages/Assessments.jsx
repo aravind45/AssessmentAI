@@ -96,11 +96,7 @@ const Assessments = () => {
       baseDuration: 3, // Default duration
       baseQuestions: 10 // Default question count
     }
-  })
-      baseDuration: 2,
-      baseQuestions: 20
-    }
-  ].map(assessment => {
+  }).map(assessment => {
     const actualQuestions = questionCounts[assessment.id] || assessment.baseQuestions
     const duration = Math.ceil(actualQuestions * assessment.baseDuration)
     

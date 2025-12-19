@@ -320,30 +320,6 @@ const Home = () => {
                 )}
               </div>
             )}
-                  padding: '8px'
-                }}>
-                  <Globe size={20} color="white" />
-                </div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>AP Physics</h3>
-              </div>
-              <p style={{ 
-                fontSize: '14px', 
-                color: '#666',
-                margin: '0 0 12px 0'
-              }}>
-                Master physics concepts with comprehensive problems
-              </p>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                fontSize: '12px',
-                color: '#999'
-              }}>
-                <span>{questionCounts['ap-physics-10th'] || 20} questions</span>
-                <ArrowRight size={16} />
-              </div>
-            </Link>
           </div>
 
           {/* View All Button */}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Groq API</title>
+</head>
+<body>
+    <h1>Test Groq API</h1>
+    <button onclick="testGroqAPI()">Test Groq API Call</button>
+    <div id="results"></div>
+    
+    <script>
+        async function testGroqAPI() {
+            const results = document.getElementById('results')
+            results.innerHTML = '<p>Testing Groq API...</p>'
+            
+            const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
+            const GROQ_API_KEY = 'your-groq-api-key-here' // Replace with your actual API key
+            const GROQ_MODEL = 'llama-3.3-70b-versatile'
+            
+            const prompt = `You are an expert programming tutor. Provide a helpful hint for this question:
+
+Question: Database Indexing - When should you avoid adding an index?
+
+Give a strategic hint that helps with approach and thinking, not the direct answer.`
+            
+            try {
+                console.log('🤖 Calling Groq API...')
+                
+                const response = await fetch(GROQ_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: GROQ_MODEL,
+                        messages: [
+                            {
+                                role: 'user',
+                                content: prompt
+                            }
+                        ],
+                        max_tokens: 200,
+                        temperature: 0.7,
+                        top_p: 0.9
+                    })
+                })
+                
+                console.log('Response status:', response.status)
+                
+                if (!response.ok) {
+                    const errorText = await response.text()
+                    throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`)
+                }
+                
+                const data = await response.json()
+                console.log('✅ Groq API response:', data)
+                
+                const result = data.choices?.[0]?.message?.content || 'No content found'
+                
+                results.innerHTML = `
+                    <h3>✅ Groq API Call Successful!</h3>
+                    <p><strong>Model:</strong> ${GROQ_MODEL}</p>
+                    <p><strong>AI Response:</strong></p>
+                    <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; white-space: pre-wrap;">${result}</div>
+                    <p><strong>Raw Response:</strong></p>
+                    <pre style="background: #f8f8f8; padding: 10px; border-radius: 5px; font-size: 12px;">${JSON.stringify(data, null, 2)}</pre>
+                `
+                
+            } catch (error) {
+                console.error('❌ Groq API Error:', error)
+                results.innerHTML = `
+                    <h3>❌ Groq API Call Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Check the browser console for more details.</p>
+                    <p><strong>Possible issues:</strong></p>
+                    <ul>
+                        <li>API key might be invalid or expired</li>
+                        <li>Network connectivity issues</li>
+                        <li>CORS policy blocking the request</li>
+                        <li>Rate limiting or quota exceeded</li>
+                    </ul>
+                `
+            }
+        }
+    </script>
+</body>
+</html>

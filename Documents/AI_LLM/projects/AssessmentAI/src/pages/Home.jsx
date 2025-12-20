@@ -226,6 +226,237 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Step-by-Step Guide Section */}
+        <div style={{
+          marginBottom: '60px',
+          background: '#f8f9fa',
+          borderRadius: '16px',
+          padding: '40px'
+        }}>
+          <h2 style={{ 
+            fontSize: '32px', 
+            fontWeight: '600', 
+            color: '#333',
+            textAlign: 'center',
+            marginBottom: '16px'
+          }}>
+            How It Works
+          </h2>
+          <p style={{
+            fontSize: '18px',
+            color: '#666',
+            textAlign: 'center',
+            marginBottom: '40px'
+          }}>
+            Create and take assessments in 4 simple steps
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '32px'
+          }}>
+            {/* Step 1 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: '#e3f2fd',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+                fontSize: '32px',
+                fontWeight: '700',
+                color: '#1976d2'
+              }}>
+                1
+              </div>
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: '600', 
+                marginBottom: '12px',
+                color: '#333'
+              }}>
+                Sign Up & Login
+              </h3>
+              <p style={{ 
+                color: '#666',
+                fontSize: '16px',
+                lineHeight: '1.5'
+              }}>
+                Create your free account and log in to start creating personalized assessments
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: '#fff3e0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+                fontSize: '32px',
+                fontWeight: '700',
+                color: '#f57c00'
+              }}>
+                2
+              </div>
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: '600', 
+                marginBottom: '12px',
+                color: '#333'
+              }}>
+                Create Assessment
+              </h3>
+              <p style={{ 
+                color: '#666',
+                fontSize: '16px',
+                lineHeight: '1.5'
+              }}>
+                Go to "Manage Questions" and create a new assessment with your preferred settings
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: '#f3e5f5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+                fontSize: '32px',
+                fontWeight: '700',
+                color: '#7b1fa2'
+              }}>
+                3
+              </div>
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: '600', 
+                marginBottom: '12px',
+                color: '#333'
+              }}>
+                Upload Excel File
+              </h3>
+              <p style={{ 
+                color: '#666',
+                fontSize: '16px',
+                lineHeight: '1.5'
+              }}>
+                Download our template, add your questions, and upload your Excel file with questions and answers
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: '#e8f5e8',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+                fontSize: '32px',
+                fontWeight: '700',
+                color: '#2e7d32'
+              }}>
+                4
+              </div>
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: '600', 
+                marginBottom: '12px',
+                color: '#333'
+              }}>
+                Take Assessment
+              </h3>
+              <p style={{ 
+                color: '#666',
+                fontSize: '16px',
+                lineHeight: '1.5'
+              }}>
+                Start your assessment, use AI help when needed, and get detailed results with explanations
+              </p>
+            </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '16px',
+            marginTop: '40px',
+            flexWrap: 'wrap'
+          }}>
+            {!user ? (
+              <>
+                <Link 
+                  to="/register"
+                  className="btn btn-primary"
+                  style={{
+                    background: '#f6d55c',
+                    color: '#333',
+                    padding: '12px 24px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    textDecoration: 'none',
+                    borderRadius: '8px',
+                    border: 'none'
+                  }}
+                >
+                  Get Started Free
+                </Link>
+                <Link 
+                  to="/login"
+                  className="btn btn-secondary"
+                  style={{
+                    background: 'transparent',
+                    color: '#333',
+                    padding: '12px 24px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    textDecoration: 'none',
+                    borderRadius: '8px',
+                    border: '2px solid #333'
+                  }}
+                >
+                  Login
+                </Link>
+              </>
+            ) : (
+              <Link 
+                to="/questions"
+                className="btn btn-primary"
+                style={{
+                  background: '#f6d55c',
+                  color: '#333',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  border: 'none'
+                }}
+              >
+                Create Your First Assessment
+              </Link>
+            )}
+          </div>
+        </div>
+
         {/* Quick Access Section */}
         <div style={{
           marginBottom: '60px'
@@ -487,6 +718,109 @@ const Home = () => {
             </Link>
           </div>
         )}
+
+        {/* Help Section */}
+        <div style={{
+          background: '#f8f9fa',
+          borderRadius: '16px',
+          padding: '40px',
+          textAlign: 'center',
+          marginTop: '60px'
+        }}>
+          <h2 style={{ 
+            fontSize: '28px', 
+            fontWeight: '600', 
+            color: '#333',
+            marginBottom: '16px'
+          }}>
+            Need Help Getting Started?
+          </h2>
+          <p style={{
+            fontSize: '18px',
+            color: '#666',
+            marginBottom: '32px',
+            maxWidth: '600px',
+            margin: '0 auto 32px'
+          }}>
+            Follow our step-by-step guide or check out the detailed user manual for comprehensive instructions.
+          </p>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}>
+            <a 
+              href="/USER_GUIDE.md"
+              target="_blank"
+              className="btn btn-secondary"
+              style={{
+                background: 'white',
+                color: '#333',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                border: '2px solid #dee2e6',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              📖 User Guide
+            </a>
+            
+            <div style={{
+              background: 'white',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: '2px solid #dee2e6',
+              fontSize: '16px',
+              color: '#666'
+            }}>
+              📧 Support: help@assessmentai.com
+            </div>
+          </div>
+
+          {/* Quick Tips */}
+          <div style={{
+            marginTop: '32px',
+            padding: '24px',
+            background: 'white',
+            borderRadius: '12px',
+            border: '1px solid #dee2e6'
+          }}>
+            <h3 style={{
+              fontSize: '20px',
+              fontWeight: '600',
+              color: '#333',
+              marginBottom: '16px'
+            }}>
+              💡 Quick Tips
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '16px',
+              textAlign: 'left'
+            }}>
+              <div>
+                <strong>Excel Format:</strong> Use our template for best results
+              </div>
+              <div>
+                <strong>AI Help:</strong> Click the AI Help button during assessments
+              </div>
+              <div>
+                <strong>File Size:</strong> Keep Excel files under 10MB
+              </div>
+              <div>
+                <strong>Questions:</strong> Use clear, concise language
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aravind Thiyagarajan - Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            scroll-behavior: smooth;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: #667eea;
+        }
+        
+        /* Sections */
+        section {
+            padding: 100px 0;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #2d3748;
+        }
+        
+        /* Home */
+        #home {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        
+        .hero {
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .highlight {
+            color: #667eea;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #718096;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 0 10px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .skill-category {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .skill-category h3 {
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .skill-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        .skill-item {
+            background: #f7fafc;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        
+        /* Projects */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .project-header {
+            background: #667eea;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            font-size: 3rem;
+        }
+        
+        .project-content {
+            padding: 2rem;
+        }
+        
+        .project-content h3 {
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .project-links {
+            margin-top: 1rem;
+        }
+        
+        .project-links a {
+            display: inline-block;
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        /* Contact */
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-top: 2rem;
+        }
+        
+        .contact-info h3 {
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .contact-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            width: 50px;
+            text-align: center;
+        }
+        
+        .contact-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .contact-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            nav ul {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">Aravind T.</div>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#education">Education</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Building</a></li>
+                <li><a href="#experience">Experience</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Home -->
+    <section id="home">
+        <div class="container">
+            <div class="hero">
+                <h1>Hi, I'm <span class="highlight">Aravind Thiyagarajan</span></h1>
+                <p>Full Stack Developer & Software Engineer</p>
+                <p>Passionate about creating innovative solutions and building scalable applications that make a difference.</p>
+                <div>
+                    <a href="#contact" class="btn btn-primary">📧 Get In Touch</a>
+                    <a href="https://github.com/aravind45" class="btn btn-secondary" target="_blank">🐙 GitHub Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Education -->
+    <section id="education">
+        <div class="container">
+            <h2 class="section-title">🎓 Education</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Master's Degree</h3>
+                    <p><strong>Computer Science</strong></p>
+                    <p>🏫 University Name</p>
+                    <p>📅 2020 - 2022</p>
+                    <p>Specialized in software engineering, algorithms, and data structures.</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Bachelor's Degree</h3>
+                    <p><strong>Information Technology</strong></p>
+                    <p>🏫 University Name</p>
+                    <p>📅 2016 - 2020</p>
+                    <p>Strong foundation in programming and web development.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills -->
+    <section id="skills">
+        <div class="container">
+            <h2 class="section-title">⚡ Skills</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>🌐 Frontend</h3>
+                    <div class="skill-items">
+                        <span class="skill-item">HTML5</span>
+                        <span class="skill-item">CSS3</span>
+                        <span class="skill-item">JavaScript</span>
+                        <span class="skill-item">React</span>
+                        <span class="skill-item">Vue.js</span>
+                        <span class="skill-item">TypeScript</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3>🚀 Backend</h3>
+                    <div class="skill-items">
+                        <span class="skill-item">Node.js</span>
+                        <span class="skill-item">Python</span>
+                        <span class="skill-item">Java</span>
+                        <span class="skill-item">Express.js</span>
+                        <span class="skill-item">Django</span>
+                        <span class="skill-item">Spring Boot</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3>🗄️ Database</h3>
+                    <div class="skill-items">
+                        <span class="skill-item">MySQL</span>
+                        <span class="skill-item">PostgreSQL</span>
+                        <span class="skill-item">MongoDB</span>
+                        <span class="skill-item">Redis</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3>🛠️ Tools</h3>
+                    <div class="skill-items">
+                        <span class="skill-item">Git</span>
+                        <span class="skill-item">Docker</span>
+                        <span class="skill-item">AWS</span>
+                        <span class="skill-item">Linux</span>
+                        <span class="skill-item">Figma</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects">
+        <div class="container">
+            <h2 class="section-title">🚀 Building</h2>
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <p>Check out my latest projects and contributions</p>
+                <a href="https://github.com/aravind45" target="_blank" class="btn btn-primary" style="margin-top: 1rem;">
+                    🐙 View My GitHub Profile
+                </a>
+            </div>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-header">🛒</div>
+                    <div class="project-content">
+                        <h3>E-Commerce Platform</h3>
+                        <p>Full-stack e-commerce application with React, Node.js, and MongoDB.</p>
+                        <div class="project-links">
+                            <a href="https://github.com/aravind45/ecommerce" target="_blank">💻 Code</a>
+                            <a href="#" target="_blank">🔗 Demo</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-header">📋</div>
+                    <div class="project-content">
+                        <h3>Task Management App</h3>
+                        <p>Collaborative task management with real-time updates and team features.</p>
+                        <div class="project-links">
+                            <a href="https://github.com/aravind45/task-manager" target="_blank">💻 Code</a>
+                            <a href="#" target="_blank">🔗 Demo</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-header">🌤️</div>
+                    <div class="project-content">
+                        <h3>Weather Dashboard</h3>
+                        <p>Responsive weather dashboard with beautiful data visualizations.</p>
+                        <div class="project-links">
+                            <a href="https://github.com/aravind45/weather-app" target="_blank">💻 Code</a>
+                            <a href="#" target="_blank">🔗 Demo</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience -->
+    <section id="experience">
+        <div class="container">
+            <h2 class="section-title">💼 Experience</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Senior Full Stack Developer</h3>
+                    <p><strong>🏢 Tech Solutions Inc.</strong></p>
+                    <p>📍 San Francisco, CA</p>
+                    <p>📅 2022 - Present</p>
+                    <p>Led development of microservices architecture serving 100K+ users.</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Full Stack Developer</h3>
+                    <p><strong>🏢 Digital Innovations Ltd.</strong></p>
+                    <p>📍 New York, NY</p>
+                    <p>📅 2020 - 2022</p>
+                    <p>Developed web applications and optimized database performance by 40%.</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Frontend Developer</h3>
+                    <p><strong>🏢 Creative Web Studio</strong></p>
+                    <p>📍 Austin, TX</p>
+                    <p>📅 2019 - 2020</p>
+                    <p>Built responsive web applications and improved loading speed by 50%.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact">
+        <div class="container">
+            <h2 class="section-title">📧 Contact</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h3>Let's Get In Touch</h3>
+                    <p>I'm always open to discussing new opportunities and interesting projects.</p>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">📧</div>
+                        <div>
+                            <h4>Email</h4>
+                            <p>aravind45@gmail.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">📱</div>
+                        <div>
+                            <h4>Phone</h4>
+                            <p>+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div>
+                            <h4>Location</h4>
+                            <p>San Francisco, CA</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <a href="https://github.com/aravind45" target="_blank" style="margin-right: 1rem; font-size: 1.5rem;">🐙</a>
+                        <a href="https://linkedin.com/in/aravind-thiyaga" target="_blank" style="margin-right: 1rem; font-size: 1.5rem;">💼</a>
+                        <a href="mailto:aravind45@gmail.com" style="font-size: 1.5rem;">📧</a>
+                    </div>
+                </div>
+                
+                <div class="contact-form">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" placeholder="Subject" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea rows="6" placeholder="Your Message" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">✉️ Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Aravind Thiyagarajan. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

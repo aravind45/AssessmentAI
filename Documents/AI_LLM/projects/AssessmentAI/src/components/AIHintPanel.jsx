@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { HelpCircle, Lightbulb, MessageSquare, Loader, X, Minimize2, Maximize2 } from 'lucide-react'
 import { groqAiService } from '../services/groqAiService'
+import { analytics } from '../utils/analytics'
 
 const AIHintPanel = ({ question, isVisible, onToggle }) => {
   const [hint, setHint] = useState('')
@@ -21,6 +22,14 @@ const AIHintPanel = ({ question, isVisible, onToggle }) => {
     setLoading(true)
     try {
       console.log('🎯 Generating hint with Groq AI...')
+      
+      // Track AI hint request
+      analytics.trackAIHintRequested(
+        question.assessmentId || 'unknown',
+        question.questionNumber || 0,
+        question.type || 'multiple-choice'
+      )
+      
       const generatedHint = await groqAiService.generateHint(question)
       setHint(generatedHint)
     } catch (error) {
@@ -35,6 +44,14 @@ const AIHintPanel = ({ question, isVisible, onToggle }) => {
     setLoading(true)
     try {
       console.log('📚 Generating explanation with Groq AI...')
+      
+      // Track AI explanation request
+      analytics.trackAIExplanationRequested(
+        question.assessmentId || 'unknown',
+        question.questionNumber || 0,
+        question.type || 'multiple-choice'
+      )
+      
       const generatedExplanation = await groqAiService.generateExplanation(question)
       setExplanation(generatedExplanation)
     } catch (error) {

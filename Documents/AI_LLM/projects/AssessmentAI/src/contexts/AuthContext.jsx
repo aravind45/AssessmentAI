@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { config } from '../config/environment'
+import { analytics } from '../utils/analytics'
 
 const AuthContext = createContext({})
 
@@ -45,6 +46,12 @@ export const AuthProvider = ({ children }) => {
         emailRedirectTo: config.redirectUrls.emailConfirmation
       }
     })
+    
+    // Track successful registration
+    if (!error && data.user) {
+      analytics.trackUserRegistration()
+    }
+    
     return { data, error }
   }
 
@@ -53,11 +60,23 @@ export const AuthProvider = ({ children }) => {
       email,
       password,
     })
+    
+    // Track successful login
+    if (!error && data.user) {
+      analytics.trackUserLogin()
+    }
+    
     return { data, error }
   }
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
+    
+    // Track logout
+    if (!error) {
+      analytics.trackUserLogout()
+    }
+    
     return { error }
   }
 

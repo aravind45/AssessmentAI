@@ -4,6 +4,8 @@ import { Clock, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react'
 import { questionManager } from '../utils/questionManager'
 import { assessmentTypesService } from '../services/database'
 import { useAuth } from '../contexts/AuthContext'
+import { analytics } from '../utils/analytics'
+import { usePageTracking } from '../hooks/useAnalytics'
 import AIHintPanel from '../components/AIHintPanel'
 
 const Assessment = () => {
@@ -16,9 +18,13 @@ const Assessment = () => {
   const [assessmentInfo, setAssessmentInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showAIPanel, setShowAIPanel] = useState(false)
+  const [assessmentStartTime, setAssessmentStartTime] = useState(null)
 
   const { user } = useAuth()
   const questions = questionManager.getQuestions(type) || []
+  
+  // Track page visit
+  usePageTracking(`Assessment - ${type}`)
   
   // Calculate dynamic time limit based on actual question count
   const getTimeLimit = (assessmentType, questionCount) => {
@@ -115,8 +121,13 @@ const Assessment = () => {
   }
 
   const startAssessment = () => {
+    const startTime = Date.now()
+    setAssessmentStartTime(startTime)
     setIsStarted(true)
     setTimeLeft(timeLimit)
+    
+    // Track assessment start
+    analytics.trackAssessmentStarted(type, assessmentInfo?.name || type)
   }
 
   const formatTime = (seconds) => {
@@ -133,11 +144,27 @@ const Assessment = () => {
   }
 
   const handleSubmit = () => {
+    const timeSpent = timeLimit - timeLeft
+    const answeredQuestions = Object.keys(answers).length
+    const totalQuestions = questions.length
+    
+    // Calculate score (simplified - you might want to implement proper scoring)
+    const score = Math.round((answeredQuestions / totalQuestions) * 100)
+    
+    // Track assessment completion
+    analytics.trackAssessmentCompleted(
+      type, 
+      assessmentInfo?.name || type, 
+      score, 
+      timeSpent, 
+      totalQuestions
+    )
+    
     const results = {
       type,
       answers,
       questions,
-      timeSpent: timeLimit - timeLeft,
+      timeSpent: timeSpent,
       totalTime: timeLimit
     }
     

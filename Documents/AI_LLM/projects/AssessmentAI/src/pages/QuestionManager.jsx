@@ -84,17 +84,41 @@ const QuestionManagerPage = () => {
     setQuestionStats(stats)
   }
 
-  const loadCustomQuestions = () => {
-    const questions = questionManager.getCustomQuestions(selectedAssessment)
-    setCustomQuestions(questions)
-    setSelectedQuestions(new Set()) // Clear selection when switching assessments
+  const loadCustomQuestions = async () => {
+    try {
+      // Load from database instead of localStorage
+      const { databaseQuestionManager } = await import('../utils/databaseQuestionManager')
+      const questions = await databaseQuestionManager.getQuestions(selectedAssessment)
+      setCustomQuestions(questions || [])
+      setSelectedQuestions(new Set()) // Clear selection when switching assessments
+    } catch (error) {
+      console.error('Error loading questions from database:', error)
+      setCustomQuestions([])
+    }
   }
 
-  const handleQuestionsUploaded = (questions, assessmentType) => {
-    questionManager.addQuestions(assessmentType, questions)
-    updateStats()
-    if (assessmentType === selectedAssessment) {
-      loadCustomQuestions()
+  const handleQuestionsUploaded = async (questions, assessmentType) => {
+    try {
+      // Save to database instead of localStorage
+      const { databaseQuestionManager } = await import('../utils/databaseQuestionManager')
+      await databaseQuestionManager.addQuestions(assessmentType, questions)
+      
+      // Update stats after database save
+      updateStats()
+      if (assessmentType === selectedAssessment) {
+        loadCustomQuestions()
+      }
+      
+      setUploadMessage({
+        type: 'success',
+        text: `Successfully saved ${questions.length} questions to database!`
+      })
+    } catch (error) {
+      console.error('Error saving questions to database:', error)
+      setUploadMessage({
+        type: 'error',
+        text: `Failed to save questions: ${error.message}`
+      })
     }
   }
 

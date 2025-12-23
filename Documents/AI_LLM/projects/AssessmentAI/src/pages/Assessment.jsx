@@ -238,6 +238,7 @@ const Assessment = () => {
     return (
       <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
         <h2>Loading assessment...</h2>
+        <p>Please wait while we load your questions...</p>
       </div>
     )
   }
@@ -247,8 +248,32 @@ const Assessment = () => {
       <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
         <h2>Assessment not found</h2>
         <p>This assessment has no questions available.</p>
+        <div style={{ 
+          background: '#fff3cd', 
+          padding: '16px', 
+          borderRadius: '8px', 
+          margin: '20px 0',
+          textAlign: 'left'
+        }}>
+          <h4>Debug Information:</h4>
+          <p><strong>Assessment ID:</strong> {type}</p>
+          <p><strong>User:</strong> {user?.email || 'Not logged in'}</p>
+          <p><strong>Assessment Info:</strong> {assessmentInfo ? JSON.stringify(assessmentInfo) : 'Not loaded'}</p>
+          <p><strong>Questions Count:</strong> {questions.length}</p>
+          <p style={{ fontSize: '12px', color: '#666' }}>
+            Check browser console for detailed logs. If questions were uploaded but not showing, 
+            there might be a mismatch between the assessment name used for saving vs loading.
+          </p>
+        </div>
         <button onClick={() => navigate('/')} className="btn btn-primary">
           Back to Home
+        </button>
+        <button 
+          onClick={() => navigate('/question-manager')} 
+          className="btn btn-secondary"
+          style={{ marginLeft: '12px' }}
+        >
+          Question Manager
         </button>
       </div>
     )

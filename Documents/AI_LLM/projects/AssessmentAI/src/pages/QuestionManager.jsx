@@ -532,6 +532,37 @@ const QuestionManagerPage = () => {
           </button>
           
           <button
+            onClick={async () => {
+              try {
+                if (!selectedAssessment) {
+                  alert('❌ Please select an assessment first')
+                  return
+                }
+                
+                const selectedAssessmentType = assessmentTypes.find(type => type.id === selectedAssessment)
+                if (!selectedAssessmentType) {
+                  alert('❌ Selected assessment type not found')
+                  return
+                }
+                
+                console.log('🧪 Testing question loading for:', selectedAssessmentType)
+                const { questionsService } = await import('../services/database')
+                const { data, error } = await questionsService.getUserQuestions(user.id, selectedAssessmentType.name)
+                
+                console.log('📊 Question loading result:', { data, error })
+                alert(`Question loading test: ${error ? `❌ Error: ${error.message}` : `✅ Found ${data?.length || 0} questions for "${selectedAssessmentType.name}"`}`)
+              } catch (err) {
+                console.error('❌ Question loading test failed:', err)
+                alert(`❌ Question loading test failed: ${err.message}`)
+              }
+            }}
+            className="btn btn-secondary"
+            style={{ fontSize: '14px' }}
+          >
+            🧪 Test Question Loading
+          </button>
+          
+          <button
             onClick={() => {
               console.log('🔍 Current state:', {
                 user: user?.id,

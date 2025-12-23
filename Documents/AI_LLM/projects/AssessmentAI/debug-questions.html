@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Questions</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Debug Questions Database</h1>
+    <div id="output"></div>
+    
+    <script>
+        const supabaseUrl = 'https://chktzonseacamniddifq.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoa3R6b25zZWFjYW1uaWRkaWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4MTM0OTgsImV4cCI6MjA4MTM4OTQ5OH0.ls993dsdw6Trf_pHVxNyuYceXki7o4hD_TkLF3FQGv4'
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        
+        async function testDatabase() {
+            const output = document.getElementById('output')
+            
+            try {
+                // Test 1: Check if user is authenticated
+                const { data: { user }, error: authError } = await supabase.auth.getUser()
+                output.innerHTML += `<h3>Authentication Test:</h3>`
+                if (authError) {
+                    output.innerHTML += `<p style="color: red;">Auth Error: ${authError.message}</p>`
+                    return
+                }
+                if (!user) {
+                    output.innerHTML += `<p style="color: orange;">No user logged in</p>`
+                    return
+                }
+                output.innerHTML += `<p style="color: green;">User logged in: ${user.email}</p>`
+                
+                // Test 2: Check custom assessment types
+                output.innerHTML += `<h3>Custom Assessment Types:</h3>`
+                const { data: assessmentTypes, error: assessmentError } = await supabase
+                    .from('custom_assessment_types')
+                    .select('*')
+                    .eq('user_id', user.id)
+                
+                if (assessmentError) {
+                    output.innerHTML += `<p style="color: red;">Assessment Types Error: ${assessmentError.message}</p>`
+                } else {
+                    output.innerHTML += `<p style="color: green;">Found ${assessmentTypes.length} assessment types:</p>`
+                    assessmentTypes.forEach(type => {
+                        output.innerHTML += `<p>- ${type.name} (ID: ${type.id})</p>`
+                    })
+                }
+                
+                // Test 3: Check custom questions
+                output.innerHTML += `<h3>Custom Questions:</h3>`
+                const { data: questions, error: questionsError } = await supabase
+                    .from('custom_questions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                
+                if (questionsError) {
+                    output.innerHTML += `<p style="color: red;">Questions Error: ${questionsError.message}</p>`
+                } else {
+                    output.innerHTML += `<p style="color: green;">Found ${questions.length} questions:</p>`
+                    const questionsByType = {}
+                    questions.forEach(q => {
+                        if (!questionsByType[q.assessment_type]) {
+                            questionsByType[q.assessment_type] = 0
+                        }
+                        questionsByType[q.assessment_type]++
+                    })
+                    
+                    Object.entries(questionsByType).forEach(([type, count]) => {
+                        output.innerHTML += `<p>- ${type}: ${count} questions</p>`
+                    })
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">Unexpected Error: ${error.message}</p>`
+            }
+        }
+        
+        // Run test when page loads
+        testDatabase()
+    </script>
+</body>
+</html>

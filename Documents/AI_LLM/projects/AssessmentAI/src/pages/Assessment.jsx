@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Clock, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import AIHintPanel from '../components/AIHintPanel'
 
 const Assessment = () => {
   const { type } = useParams()
@@ -14,6 +15,7 @@ const Assessment = () => {
   const [answers, setAnswers] = useState({})
   const [timeLeft, setTimeLeft] = useState(1800) // 30 minutes
   const [isStarted, setIsStarted] = useState(false)
+  const [showAIPanel, setShowAIPanel] = useState(false)
 
   useEffect(() => {
     loadQuestions()
@@ -117,7 +119,40 @@ const Assessment = () => {
   const progress = ((currentQuestion + 1) / questions.length) * 100
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Header with AI Help Button */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px',
+        padding: '16px',
+        background: '#f8f9fa',
+        borderRadius: '8px'
+      }}>
+        <div>
+          <h2 style={{ margin: 0 }}>Assessment</h2>
+          <p style={{ margin: '4px 0 0 0', color: '#5f6368' }}>
+            Question {currentQuestion + 1} of {questions.length}
+          </p>
+        </div>
+        
+        <button
+          onClick={() => setShowAIPanel(!showAIPanel)}
+          className="btn btn-secondary"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            background: showAIPanel ? '#f6d55c' : 'white',
+            color: showAIPanel ? '#333' : '#666'
+          }}
+        >
+          <HelpCircle size={16} />
+          AI Help
+        </button>
+      </div>
+
       {/* Progress */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ 
@@ -138,93 +173,118 @@ const Assessment = () => {
         </p>
       </div>
 
-      {/* Question */}
-      <div className="card" style={{ marginBottom: '20px' }}>
-        <h3>{question.title || question.statement}</h3>
-        {question.description && <p>{question.description}</p>}
-        
-        {/* Multiple Choice */}
-        {question.options && (
-          <div style={{ margin: '20px 0' }}>
-            {question.options.map((option, index) => (
-              <label key={index} style={{ 
-                display: 'block', 
-                margin: '10px 0',
-                cursor: 'pointer'
-              }}>
-                <input
-                  type="radio"
-                  name={`question_${question.id}`}
-                  value={index}
-                  checked={answers[question.id] === index}
-                  onChange={() => handleAnswer(question.id, index)}
-                  style={{ marginRight: '10px' }}
-                />
-                {option}
-              </label>
-            ))}
+      <div style={{ display: 'flex', gap: '24px' }}>
+        {/* Main Content */}
+        <div style={{ flex: showAIPanel ? '1' : '1', minWidth: 0 }}>
+          {/* Question */}
+          <div className="card" style={{ marginBottom: '20px' }}>
+            <h3>{question.title || question.statement}</h3>
+            {question.description && <p>{question.description}</p>}
+            
+            {/* Multiple Choice */}
+            {question.options && (
+              <div style={{ margin: '20px 0' }}>
+                {question.options.map((option, index) => (
+                  <label key={index} style={{ 
+                    display: 'block', 
+                    margin: '10px 0',
+                    cursor: 'pointer',
+                    padding: '12px',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    backgroundColor: answers[question.id] === index ? '#f0f7ff' : 'white',
+                    borderColor: answers[question.id] === index ? '#2196f3' : '#e0e0e0'
+                  }}>
+                    <input
+                      type="radio"
+                      name={`question_${question.id}`}
+                      value={index}
+                      checked={answers[question.id] === index}
+                      onChange={() => handleAnswer(question.id, index)}
+                      style={{ marginRight: '10px' }}
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {/* Text Answer */}
+            {question.type === 'text' && (
+              <textarea
+                value={answers[question.id] || ''}
+                onChange={(e) => handleAnswer(question.id, e.target.value)}
+                placeholder="Enter your answer..."
+                style={{ 
+                  width: '100%', 
+                  height: '100px', 
+                  margin: '20px 0',
+                  padding: '10px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px'
+                }}
+              />
+            )}
+
+            {/* Likert Scale */}
+            {question.type === 'likert' && (
+              <div style={{ margin: '20px 0' }}>
+                {['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].map((option, index) => (
+                  <label key={index} style={{ 
+                    display: 'block', 
+                    margin: '10px 0',
+                    cursor: 'pointer',
+                    padding: '12px',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    backgroundColor: answers[question.id] === index ? '#f0f7ff' : 'white',
+                    borderColor: answers[question.id] === index ? '#2196f3' : '#e0e0e0'
+                  }}>
+                    <input
+                      type="radio"
+                      name={`question_${question.id}`}
+                      value={index}
+                      checked={answers[question.id] === index}
+                      onChange={() => handleAnswer(question.id, index)}
+                      style={{ marginRight: '10px' }}
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Text Answer */}
-        {question.type === 'text' && (
-          <textarea
-            value={answers[question.id] || ''}
-            onChange={(e) => handleAnswer(question.id, e.target.value)}
-            placeholder="Enter your answer..."
-            style={{ 
-              width: '100%', 
-              height: '100px', 
-              margin: '20px 0',
-              padding: '10px',
-              border: '1px solid #ddd',
-              borderRadius: '4px'
-            }}
-          />
-        )}
-
-        {/* Likert Scale */}
-        {question.type === 'likert' && (
-          <div style={{ margin: '20px 0' }}>
-            {['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].map((option, index) => (
-              <label key={index} style={{ 
-                display: 'block', 
-                margin: '10px 0',
-                cursor: 'pointer'
-              }}>
-                <input
-                  type="radio"
-                  name={`question_${question.id}`}
-                  value={index}
-                  checked={answers[question.id] === index}
-                  onChange={() => handleAnswer(question.id, index)}
-                  style={{ marginRight: '10px' }}
-                />
-                {option}
-              </label>
-            ))}
+          {/* Navigation */}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <button 
+              onClick={prevQuestion}
+              disabled={currentQuestion === 0}
+              className="btn btn-secondary"
+            >
+              <ChevronLeft size={16} /> Previous
+            </button>
+            
+            {currentQuestion === questions.length - 1 ? (
+              <button onClick={submitAssessment} className="btn btn-primary">
+                Submit Assessment
+              </button>
+            ) : (
+              <button onClick={nextQuestion} className="btn btn-primary">
+                Next <ChevronRight size={16} />
+              </button>
+            )}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <button 
-          onClick={prevQuestion}
-          disabled={currentQuestion === 0}
-          className="btn btn-secondary"
-        >
-          <ChevronLeft size={16} /> Previous
-        </button>
-        
-        {currentQuestion === questions.length - 1 ? (
-          <button onClick={submitAssessment} className="btn btn-primary">
-            Submit Assessment
-          </button>
-        ) : (
-          <button onClick={nextQuestion} className="btn btn-primary">
-            Next <ChevronRight size={16} />
-          </button>
+        {/* AI Help Panel */}
+        {showAIPanel && (
+          <div style={{ width: '400px', flexShrink: 0 }}>
+            <AIHintPanel 
+              question={question}
+              onClose={() => setShowAIPanel(false)}
+            />
+          </div>
         )}
       </div>
     </div>

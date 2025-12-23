@@ -43,29 +43,37 @@ const Assessment = () => {
         
         if (isUUID) {
           // Load custom assessment info first
-          const { data: customTypes } = await assessmentTypesService.getUserAssessmentTypes(user.id)
-          const customType = customTypes?.find(ct => ct.id === type)
+          console.log('🔍 Loading custom assessment types for user:', user.id)
+          const { data: customTypes, error: typesError } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+          console.log('📋 Custom types response:', { customTypes, typesError })
           
+          const customType = customTypes?.find(ct => ct.id === type)
           console.log('📋 Found custom assessment type:', customType)
           
           if (customType) {
             // Load questions from database using assessment name
+            console.log('🔍 Loading questions for assessment name:', customType.name)
             const { questionsService } = await import('../services/database')
             const { data, error } = await questionsService.getUserQuestions(user.id, customType.name)
             
-            console.log('📊 Database response:', { data, error })
+            console.log('📊 Database response:', { data, error, assessmentName: customType.name })
             
             if (error) {
               console.error('❌ Error loading custom questions:', error)
               setQuestions([])
             } else {
+              console.log('📊 Raw database data:', data)
               // Transform database records to question format
-              const questions = (data || []).map(record => record.question_data)
-              console.log('✅ Loaded questions:', questions)
+              const questions = (data || []).map(record => {
+                console.log('🔄 Transforming record:', record)
+                return record.question_data
+              })
+              console.log('✅ Transformed questions:', questions)
               setQuestions(questions)
             }
           } else {
             console.error('❌ Custom assessment type not found:', type)
+            console.log('Available types:', customTypes?.map(t => ({ id: t.id, name: t.name })))
             setQuestions([])
           }
         } else {
@@ -274,6 +282,46 @@ const Assessment = () => {
           style={{ marginLeft: '12px' }}
         >
           Question Manager
+        </button>
+        <button 
+          onClick={async () => {
+            try {
+              console.log('🧪 Direct database test...')
+              const { questionsService } = await import('../services/database')
+              
+              // Test 1: Get all questions for user
+              const { data: allQuestions, error: allError } = await questionsService.getUserQuestions(user.id)
+              console.log('📊 All user questions:', { allQuestions, allError })
+              
+              // Test 2: Get assessment types
+              const { data: assessmentTypes, error: typesError } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+              console.log('📋 Assessment types:', { assessmentTypes, typesError })
+              
+              // Test 3: Try to find the specific assessment
+              const customType = assessmentTypes?.find(ct => ct.id === type)
+              console.log('🎯 Target assessment:', customType)
+              
+              if (customType) {
+                // Test 4: Get questions for this specific assessment
+                const { data: specificQuestions, error: specificError } = await questionsService.getUserQuestions(user.id, customType.name)
+                console.log('🎯 Questions for this assessment:', { specificQuestions, specificError, searchName: customType.name })
+              }
+              
+              alert('Check console for detailed database test results')
+            } catch (error) {
+              console.error('❌ Database test failed:', error)
+              alert(`Database test failed: ${error.message}`)
+            }
+          }}
+          className="btn"
+          style={{ 
+            marginLeft: '12px',
+            background: '#fff3cd',
+            color: '#856404',
+            border: '1px solid #ffc107'
+          }}
+        >
+          🧪 Test Database
         </button>
       </div>
     )

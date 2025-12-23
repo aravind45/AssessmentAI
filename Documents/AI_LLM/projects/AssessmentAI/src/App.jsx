@@ -6,6 +6,7 @@ import Header from './components/Header'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Assessment from './pages/Assessment'
+import AssessmentWorking from './pages/AssessmentWorking'
 import Results from './pages/Results'
 import QuestionManager from './pages/QuestionManager'
 import Assessments from './pages/Assessments'
@@ -35,6 +36,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/assessments" element={<Assessments />} />
               <Route path="/assessment/:type" element={<Assessment />} />
+              <Route path="/assessment-debug/:type" element={<AssessmentWorking />} />
               <Route path="/results" element={<Results />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>

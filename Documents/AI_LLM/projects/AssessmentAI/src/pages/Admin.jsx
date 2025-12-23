@@ -371,6 +371,7 @@ const Admin = () => {
           { id: 'overview', label: 'Overview', icon: BarChart3 },
           { id: 'users', label: 'Users', icon: Users },
           { id: 'assessments', label: 'All Assessments', icon: FileText },
+          { id: 'migration', label: 'Migrate Data', icon: Upload },
           { id: 'activity', label: 'Recent Activity', icon: Database }
         ].map(tab => {
           const IconComponent = tab.icon
@@ -906,6 +907,27 @@ const Admin = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Migration Tab */}
+      {activeTab === 'migration' && (
+        <div className="card">
+          <h2 style={{ marginBottom: '24px' }}>Migrate Data from localStorage to Database</h2>
+          <div style={{ 
+            background: '#fff3cd', 
+            padding: '16px', 
+            borderRadius: '8px',
+            marginBottom: '24px',
+            border: '1px solid #ffc107'
+          }}>
+            <h4 style={{ color: '#856404', marginBottom: '8px' }}>⚠️ Important:</h4>
+            <p style={{ color: '#856404', margin: 0 }}>
+              This tool migrates assessment types and questions from browser localStorage to the database. 
+              Use this if your assessments show in the UI but don't work when clicked.
+            </p>
+          </div>
+          <MigrateAssessments />
         </div>
       )}
 

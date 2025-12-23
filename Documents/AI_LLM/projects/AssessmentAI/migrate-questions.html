@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migrate Questions to Database</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Migrate Questions from localStorage to Database</h1>
+    <div id="output"></div>
+    <button onclick="migrateData()" style="padding: 10px 20px; font-size: 16px; margin: 10px;">
+        🔄 Migrate Data
+    </button>
+    
+    <script>
+        const supabaseUrl = 'https://chktzonseacamniddifq.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoa3R6b25zZWFjYW1uaWRkaWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4MTM0OTgsImV4cCI6MjA4MTM4OTQ5OH0.ls993dsdw6Trf_pHVxNyuYceXki7o4hD_TkLF3FQGv4'
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        
+        async function migrateData() {
+            const output = document.getElementById('output')
+            output.innerHTML = '<h3>Starting Migration...</h3>'
+            
+            try {
+                // Check authentication
+                const { data: { user }, error: authError } = await supabase.auth.getUser()
+                if (authError || !user) {
+                    output.innerHTML += '<p style="color: red;">Please log in first!</p>'
+                    return
+                }
+                
+                output.innerHTML += `<p>User: ${user.email}</p>`
+                
+                // Step 1: Check localStorage for assessment types
+                const customAssessmentTypes = JSON.parse(localStorage.getItem('customAssessmentTypes') || '[]')
+                output.innerHTML += `<h4>Found ${customAssessmentTypes.length} assessment types in localStorage:</h4>`
+                
+                for (const type of customAssessmentTypes) {
+                    output.innerHTML += `<p>- ${type.name} (${type.id})</p>`
+                    
+                    // Create assessment type in database
+                    const { data: createdType, error: typeError } = await supabase
+                        .from('custom_assessment_types')
+                        .upsert({
+                            id: type.id,
+                            user_id: user.id,
+                            name: type.name,
+                            description: type.description || '',
+                            icon: type.icon || 'FileText',
+                            color: type.color || '#f6d55c',
+                            is_public: type.isPublic || false
+                        })
+                        .select()
+                    
+                    if (typeError) {
+                        output.innerHTML += `<p style="color: red;">Error creating ${type.name}: ${typeError.message}</p>`
+                    } else {
+                        output.innerHTML += `<p style="color: green;">✅ Created assessment type: ${type.name}</p>`
+                    }
+                }
+                
+                // Step 2: Check localStorage for questions
+                const allQuestions = []
+                for (const type of customAssessmentTypes) {
+                    const questions = JSON.parse(localStorage.getItem(`customQuestions_${type.id}`) || '[]')
+                    if (questions.length > 0) {
+                        output.innerHTML += `<h4>Found ${questions.length} questions for ${type.name}:</h4>`
+                        
+                        // Prepare questions for database
+                        const questionsToInsert = questions.map(question => ({
+                            user_id: user.id,
+                            assessment_type: type.name,
+                            custom_assessment_id: type.id,
+                            question_data: question
+                        }))
+                        
+                        // Insert questions
+                        const { data: insertedQuestions, error: questionsError } = await supabase
+                            .from('custom_questions')
+                            .insert(questionsToInsert)
+                            .select()
+                        
+                        if (questionsError) {
+                            output.innerHTML += `<p style="color: red;">Error inserting questions for ${type.name}: ${questionsError.message}</p>`
+                        } else {
+                            output.innerHTML += `<p style="color: green;">✅ Inserted ${questions.length} questions for ${type.name}</p>`
+                        }
+                    }
+                }
+                
+                // Step 3: Verify migration
+                output.innerHTML += '<h3>Verification:</h3>'
+                
+                const { data: dbTypes } = await supabase
+                    .from('custom_assessment_types')
+                    .select('*')
+                    .eq('user_id', user.id)
+                
+                const { data: dbQuestions } = await supabase
+                    .from('custom_questions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                
+                output.innerHTML += `<p>Database now has:</p>`
+                output.innerHTML += `<p>- ${dbTypes?.length || 0} assessment types</p>`
+                output.innerHTML += `<p>- ${dbQuestions?.length || 0} questions</p>`
+                
+                if (dbTypes && dbQuestions) {
+                    output.innerHTML += '<h4>Assessment Types in Database:</h4>'
+                    dbTypes.forEach(type => {
+                        const questionCount = dbQuestions.filter(q => q.assessment_type === type.name).length
+                        output.innerHTML += `<p>- ${type.name}: ${questionCount} questions</p>`
+                    })
+                }
+                
+                output.innerHTML += '<h3 style="color: green;">✅ Migration Complete!</h3>'
+                output.innerHTML += '<p>You can now try accessing your assessments again.</p>'
+                
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">Migration failed: ${error.message}</p>`
+                console.error('Migration error:', error)
+            }
+        }
+    </script>
+</body>
+</html>

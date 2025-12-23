@@ -28,62 +28,70 @@ const Assessment = () => {
     const loadQuestions = async () => {
       try {
         setLoading(true)
-        console.log('🔄 Loading questions for assessment type:', type)
         
         if (!user) {
-          console.log('👤 No user logged in')
           setQuestions([])
           setLoading(false)
           return
         }
 
+        // Direct database fetch - no complex logic
+        const { supabase } = await import('../lib/supabase')
+        
+        // Get all questions for this user
+        const { data: allQuestions, error } = await supabase
+          .from('custom_questions')
+          .select('*')
+          .eq('user_id', user.id)
+        
+        if (error) {
+          console.error('Database error:', error)
+          setQuestions([])
+          setLoading(false)
+          return
+        }
+        
+        console.log('All questions from database:', allQuestions)
+        
         // Check if this is a UUID (custom assessment)
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(type)
-        console.log('🔍 Is UUID?', isUUID)
         
         if (isUUID) {
-          // Load custom assessment info first
-          console.log('🔍 Loading custom assessment types for user:', user.id)
-          const { data: customTypes, error: typesError } = await assessmentTypesService.getUserAssessmentTypes(user.id)
-          console.log('📋 Custom types response:', { customTypes, typesError })
+          // Get the assessment type info
+          const { data: assessmentTypes } = await supabase
+            .from('custom_assessment_types')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('id', type)
+            .single()
           
-          const customType = customTypes?.find(ct => ct.id === type)
-          console.log('📋 Found custom assessment type:', customType)
-          
-          if (customType) {
-            // Load questions from database using assessment name
-            console.log('🔍 Loading questions for assessment name:', customType.name)
-            const { questionsService } = await import('../services/database')
-            const { data, error } = await questionsService.getUserQuestions(user.id, customType.name)
+          if (assessmentTypes) {
+            console.log('Assessment type found:', assessmentTypes)
             
-            console.log('📊 Database response:', { data, error, assessmentName: customType.name })
+            // Filter questions by assessment name
+            const matchingQuestions = allQuestions.filter(q => 
+              q.assessment_type === assessmentTypes.name
+            )
             
-            if (error) {
-              console.error('❌ Error loading custom questions:', error)
-              setQuestions([])
-            } else {
-              console.log('📊 Raw database data:', data)
-              // Transform database records to question format
-              const questions = (data || []).map(record => {
-                console.log('🔄 Transforming record:', record)
-                return record.question_data
-              })
-              console.log('✅ Transformed questions:', questions)
-              setQuestions(questions)
-            }
+            console.log(`Questions for "${assessmentTypes.name}":`, matchingQuestions)
+            
+            // Transform to question format
+            const questions = matchingQuestions.map(record => record.question_data)
+            console.log('Final questions:', questions)
+            
+            setQuestions(questions)
           } else {
-            console.error('❌ Custom assessment type not found:', type)
-            console.log('Available types:', customTypes?.map(t => ({ id: t.id, name: t.name })))
+            console.log('Assessment type not found for UUID:', type)
             setQuestions([])
           }
         } else {
-          // For built-in assessments (if any remain)
-          console.log('📚 Loading built-in questions')
+          // Built-in assessment - use old logic
           const builtInQuestions = questionManager.getQuestions(type) || []
           setQuestions(builtInQuestions)
         }
+        
       } catch (error) {
-        console.error('❌ Error loading questions:', error)
+        console.error('Error loading questions:', error)
         setQuestions([])
       } finally {
         setLoading(false)

@@ -27,27 +27,63 @@ const Assessment = () => {
   useEffect(() => {
     const loadQuestions = async () => {
       try {
+        setLoading(true)
+        console.log('🔄 Loading questions for assessment type:', type)
+        
+        if (!user) {
+          console.log('👤 No user logged in')
+          setQuestions([])
+          setLoading(false)
+          return
+        }
+
         // Check if this is a UUID (custom assessment)
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(type)
+        console.log('🔍 Is UUID?', isUUID)
         
         if (isUUID) {
-          // Load custom questions from database
-          const { databaseQuestionManager } = await import('../utils/databaseQuestionManager')
-          const customQuestions = await databaseQuestionManager.getQuestions(type)
-          setQuestions(customQuestions || [])
+          // Load custom assessment info first
+          const { data: customTypes } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+          const customType = customTypes?.find(ct => ct.id === type)
+          
+          console.log('📋 Found custom assessment type:', customType)
+          
+          if (customType) {
+            // Load questions from database using assessment name
+            const { questionsService } = await import('../services/database')
+            const { data, error } = await questionsService.getUserQuestions(user.id, customType.name)
+            
+            console.log('📊 Database response:', { data, error })
+            
+            if (error) {
+              console.error('❌ Error loading custom questions:', error)
+              setQuestions([])
+            } else {
+              // Transform database records to question format
+              const questions = (data || []).map(record => record.question_data)
+              console.log('✅ Loaded questions:', questions)
+              setQuestions(questions)
+            }
+          } else {
+            console.error('❌ Custom assessment type not found:', type)
+            setQuestions([])
+          }
         } else {
-          // Load built-in questions
+          // For built-in assessments (if any remain)
+          console.log('📚 Loading built-in questions')
           const builtInQuestions = questionManager.getQuestions(type) || []
           setQuestions(builtInQuestions)
         }
       } catch (error) {
-        console.error('Error loading questions:', error)
+        console.error('❌ Error loading questions:', error)
         setQuestions([])
+      } finally {
+        setLoading(false)
       }
     }
     
     loadQuestions()
-  }, [type])
+  }, [type, user])
   
   // Track page visit
   usePageTracking(`Assessment - ${type}`)

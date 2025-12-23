@@ -76,69 +76,187 @@ const QuestionManagerPage = () => {
     }
   }
 
-  const updateStats = () => {
-    const stats = {}
-    assessmentTypes.forEach(type => {
-      stats[type.id] = questionManager.getQuestionStats(type.id)
-    })
-    setQuestionStats(stats)
+  const updateStats = async () => {
+    if (!user) return
+
+    try {
+      const { questionsService } = await import('../services/database')
+      const { data: questionStats, error } = await questionsService.getQuestionStats(user.id)
+      
+      if (error) {
+        console.error('Error loading question stats:', error)
+        return
+      }
+
+      // Create stats object for all assessment types
+      const stats = {}
+      assessmentTypes.forEach(type => {
+        const count = questionStats[type.name] || 0
+        stats[type.id] = {
+          default: 0, // No default questions anymore
+          custom: count,
+          total: count
+        }
+      })
+      
+      setQuestionStats(stats)
+    } catch (error) {
+      console.error('Error updating stats:', error)
+    }
   }
 
   const loadCustomQuestions = async () => {
     try {
-      // Load from database instead of localStorage
-      const { databaseQuestionManager } = await import('../utils/databaseQuestionManager')
-      const questions = await databaseQuestionManager.getQuestions(selectedAssessment)
-      setCustomQuestions(questions || [])
+      if (!user) {
+        console.log('👤 No user logged in')
+        setCustomQuestions([])
+        return
+      }
+
+      // Find the selected assessment type
+      const selectedAssessmentType = assessmentTypes.find(type => type.id === selectedAssessment)
+      if (!selectedAssessmentType) {
+        console.log('❌ Assessment type not found:', selectedAssessment)
+        setCustomQuestions([])
+        return
+      }
+
+      console.log('🔍 Loading questions for assessment:', selectedAssessmentType)
+
+      // Load questions from database using assessment name
+      const { questionsService } = await import('../services/database')
+      const { data, error } = await questionsService.getUserQuestions(user.id, selectedAssessmentType.name)
+      
+      if (error) {
+        console.error('❌ Error loading questions from database:', error)
+        setCustomQuestions([])
+        return
+      }
+
+      console.log('📊 Raw database data:', data)
+
+      // Transform database records to question format
+      const questions = (data || []).map(record => ({
+        ...record.question_data,
+        dbId: record.id,
+        isCustom: true
+      }))
+
+      console.log('✅ Transformed questions:', questions)
+      setCustomQuestions(questions)
       setSelectedQuestions(new Set()) // Clear selection when switching assessments
     } catch (error) {
-      console.error('Error loading questions from database:', error)
+      console.error('❌ Error loading questions from database:', error)
       setCustomQuestions([])
     }
   }
 
-  const handleQuestionsUploaded = async (questions, assessmentType) => {
+  const handleQuestionsUploaded = async (questions, assessmentId) => {
     try {
-      // Save to database instead of localStorage
-      const { databaseQuestionManager } = await import('../utils/databaseQuestionManager')
-      await databaseQuestionManager.addQuestions(assessmentType, questions)
+      console.log('🔄 Starting question upload...', { assessmentId, questionCount: questions.length })
       
-      // Update stats after database save
-      updateStats()
-      if (assessmentType === selectedAssessment) {
-        loadCustomQuestions()
+      // Find the assessment type name from the selected assessment
+      const selectedAssessmentType = assessmentTypes.find(type => type.id === assessmentId)
+      if (!selectedAssessmentType) {
+        throw new Error('Assessment type not found')
+      }
+
+      console.log('📋 Found assessment type:', selectedAssessmentType)
+
+      // Save to database with assessment type name and custom assessment ID
+      const { questionsService } = await import('../services/database')
+      console.log('💾 Saving to database...')
+      
+      const { data, error } = await questionsService.addQuestions(
+        user.id, 
+        selectedAssessmentType.name, // Use assessment name, not ID
+        questions,
+        selectedAssessmentType.isCustom ? selectedAssessmentType.id : null // Pass custom assessment ID if it's custom
+      )
+
+      if (error) {
+        console.error('❌ Database error:', error)
+        throw new Error(error.message)
       }
       
-      setUploadMessage({
-        type: 'success',
-        text: `Successfully saved ${questions.length} questions to database!`
-      })
+      console.log('✅ Questions saved to database:', data)
+      
+      // Update stats after database save
+      await updateStats()
+      if (assessmentId === selectedAssessment) {
+        await loadCustomQuestions()
+      }
+      
+      alert(`✅ Successfully saved ${questions.length} questions to database!`)
     } catch (error) {
-      console.error('Error saving questions to database:', error)
-      setUploadMessage({
-        type: 'error',
-        text: `Failed to save questions: ${error.message}`
-      })
+      console.error('❌ Error saving questions to database:', error)
+      alert(`❌ Failed to save questions: ${error.message}`)
     }
   }
 
-  const handleDeleteQuestion = (questionId) => {
+  const handleDeleteQuestion = async (questionId) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
-      questionManager.removeCustomQuestions(selectedAssessment, [questionId])
-      updateStats()
-      loadCustomQuestions()
+      try {
+        // Find the question to get its database ID
+        const question = customQuestions.find(q => q.id === questionId)
+        if (!question || !question.dbId) {
+          alert('❌ Cannot delete question: Database ID not found')
+          return
+        }
+
+        // Delete from database
+        const { questionsService } = await import('../services/database')
+        const { error } = await questionsService.deleteQuestions(user.id, [question.dbId])
+        
+        if (error) {
+          alert(`❌ Error deleting question: ${error.message}`)
+          return
+        }
+
+        // Refresh the list
+        updateStats()
+        loadCustomQuestions()
+        alert('✅ Question deleted successfully!')
+      } catch (error) {
+        console.error('Error deleting question:', error)
+        alert(`❌ Error deleting question: ${error.message}`)
+      }
     }
   }
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedQuestions.size === 0) return
     
     const confirmMessage = `Delete ${selectedQuestions.size} selected questions?\n\nThis action cannot be undone.`
     
     if (window.confirm(confirmMessage)) {
-      questionManager.removeCustomQuestions(selectedAssessment, Array.from(selectedQuestions))
-      updateStats()
-      loadCustomQuestions()
+      try {
+        // Get database IDs for selected questions
+        const questionsToDelete = customQuestions.filter(q => selectedQuestions.has(q.id))
+        const dbIds = questionsToDelete.map(q => q.dbId).filter(Boolean)
+        
+        if (dbIds.length === 0) {
+          alert('❌ Cannot delete questions: Database IDs not found')
+          return
+        }
+
+        // Delete from database
+        const { questionsService } = await import('../services/database')
+        const { error } = await questionsService.deleteQuestions(user.id, dbIds)
+        
+        if (error) {
+          alert(`❌ Error deleting questions: ${error.message}`)
+          return
+        }
+
+        // Refresh the list
+        updateStats()
+        loadCustomQuestions()
+        alert(`✅ Successfully deleted ${selectedQuestions.size} questions!`)
+      } catch (error) {
+        console.error('Error deleting questions:', error)
+        alert(`❌ Error deleting questions: ${error.message}`)
+      }
     }
   }
 
@@ -160,7 +278,7 @@ const QuestionManagerPage = () => {
     }
   }
 
-  const handleClearAllQuestions = () => {
+  const handleClearAllQuestions = async () => {
     const assessmentName = assessmentTypes.find(t => t.id === selectedAssessment)?.name
     const questionCount = customQuestions.length
     
@@ -172,12 +290,26 @@ const QuestionManagerPage = () => {
       `Are you sure you want to proceed?`
     
     if (window.confirm(confirmMessage)) {
-      questionManager.clearCustomQuestions(selectedAssessment)
-      updateStats()
-      loadCustomQuestions()
-      
-      // Show success message
-      alert(`✅ Successfully deleted ${questionCount} custom questions from ${assessmentName}`)
+      try {
+        // Clear all questions for this assessment from database
+        const { questionsService } = await import('../services/database')
+        const { error } = await questionsService.clearUserQuestions(user.id, assessmentName)
+        
+        if (error) {
+          alert(`❌ Error clearing questions: ${error.message}`)
+          return
+        }
+
+        // Refresh the list
+        updateStats()
+        loadCustomQuestions()
+        
+        // Show success message
+        alert(`✅ Successfully deleted ${questionCount} custom questions from ${assessmentName}`)
+      } catch (error) {
+        console.error('Error clearing questions:', error)
+        alert(`❌ Error clearing questions: ${error.message}`)
+      }
     }
   }
 
@@ -234,15 +366,63 @@ const QuestionManagerPage = () => {
 
   const handleExportQuestions = () => {
     try {
-      const questions = questionManager.exportCustomQuestions(selectedAssessment)
+      if (customQuestions.length === 0) {
+        alert('❌ No questions to export')
+        return
+      }
+
+      // Transform questions back to Excel format
+      const exportData = customQuestions.map(q => {
+        if (q.type === 'likert') {
+          return {
+            id: q.id,
+            statement: q.statement,
+            type: q.type,
+            category: q.category,
+            trait: q.trait
+          }
+        } else if (q.type === 'text') {
+          return {
+            id: q.id,
+            title: q.title,
+            difficulty: q.difficulty,
+            description: q.description,
+            type: q.type,
+            sampleAnswer: q.sampleAnswer,
+            criteria1: q.evaluationCriteria?.[0] || '',
+            criteria2: q.evaluationCriteria?.[1] || '',
+            criteria3: q.evaluationCriteria?.[2] || '',
+            criteria4: q.evaluationCriteria?.[3] || ''
+          }
+        } else {
+          return {
+            id: q.id,
+            title: q.title,
+            difficulty: q.difficulty,
+            description: q.description,
+            example: q.example,
+            type: q.type,
+            option1: q.options?.[0] || '',
+            option2: q.options?.[1] || '',
+            option3: q.options?.[2] || '',
+            option4: q.options?.[3] || '',
+            correctAnswer: (q.correctAnswer || 0) + 1, // Convert back to 1-based
+            explanation: q.explanation
+          }
+        }
+      })
       
-      const ws = XLSX.utils.json_to_sheet(questions)
+      const ws = XLSX.utils.json_to_sheet(exportData)
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, 'Custom Questions')
       
-      XLSX.writeFile(wb, `${selectedAssessment}-custom-questions.xlsx`)
+      const assessmentName = assessmentTypes.find(t => t.id === selectedAssessment)?.name || selectedAssessment
+      XLSX.writeFile(wb, `${assessmentName}-custom-questions.xlsx`)
+      
+      alert(`✅ Successfully exported ${customQuestions.length} questions!`)
     } catch (error) {
-      alert(error.message)
+      console.error('Error exporting questions:', error)
+      alert(`❌ Error exporting questions: ${error.message}`)
     }
   }
 
@@ -308,6 +488,66 @@ const QuestionManagerPage = () => {
           Back to Home
         </button>
         <h1 style={{ margin: 0 }}>Question Manager</h1>
+      </div>
+
+      {/* Test Database Connection */}
+      <div className="card" style={{ marginBottom: '24px', background: '#fff3cd', border: '1px solid #ffc107' }}>
+        <h3 style={{ color: '#856404', marginBottom: '12px' }}>🔧 Debug Tools</h3>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🧪 Testing database connection...')
+                const { questionsService } = await import('../services/database')
+                const { data, error } = await questionsService.getQuestionStats(user.id)
+                console.log('📊 Question stats result:', { data, error })
+                alert(`Database test: ${error ? `❌ Error: ${error.message}` : `✅ Success! Stats: ${JSON.stringify(data)}`}`)
+              } catch (err) {
+                console.error('❌ Database test failed:', err)
+                alert(`❌ Database test failed: ${err.message}`)
+              }
+            }}
+            className="btn btn-secondary"
+            style={{ fontSize: '14px' }}
+          >
+            🧪 Test Database Connection
+          </button>
+          
+          <button
+            onClick={async () => {
+              try {
+                console.log('🔍 Testing assessment types...')
+                const { data, error } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+                console.log('📋 Assessment types result:', { data, error })
+                alert(`Assessment types: ${error ? `❌ Error: ${error.message}` : `✅ Found ${data?.length || 0} assessments`}`)
+              } catch (err) {
+                console.error('❌ Assessment types test failed:', err)
+                alert(`❌ Assessment types test failed: ${err.message}`)
+              }
+            }}
+            className="btn btn-secondary"
+            style={{ fontSize: '14px' }}
+          >
+            📋 Test Assessment Types
+          </button>
+          
+          <button
+            onClick={() => {
+              console.log('🔍 Current state:', {
+                user: user?.id,
+                selectedAssessment,
+                assessmentTypes: assessmentTypes.length,
+                customQuestions: customQuestions.length,
+                questionStats
+              })
+              alert('Check console for current state details')
+            }}
+            className="btn btn-secondary"
+            style={{ fontSize: '14px' }}
+          >
+            🔍 Log Current State
+          </button>
+        </div>
       </div>
 
       {/* Assessment Type Selector */}

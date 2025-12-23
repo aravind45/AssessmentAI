@@ -21,63 +21,60 @@ const Home = () => {
   }
 
   useEffect(() => {
-    // Get question counts for custom assessments only
-    const updateCounts = () => {
-      const counts = {}
-      customAssessments.forEach(assessment => {
-        const stats = questionManager.getQuestionStats(assessment.id)
-        counts[assessment.id] = stats.total
-      })
-      setQuestionCounts(counts)
-    }
-
-    updateCounts()
-    loadCustomAssessments()
-
-    // Listen for storage changes to update counts when questions are added
-    const handleStorageChange = () => {
-      updateCounts()
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Also listen for focus events to update when returning from question manager
-    window.addEventListener('focus', () => {
-      updateCounts()
+    if (user) {
       loadCustomAssessments()
-    })
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('focus', updateCounts)
+    } else {
+      setCustomAssessments([])
+      setQuestionCounts({})
     }
   }, [user])
 
   const loadCustomAssessments = async () => {
     if (!user) {
       setCustomAssessments([])
+      setQuestionCounts({})
       return
     }
 
     try {
       setLoading(true)
-      const { data, error } = await assessmentTypesService.getUserAssessmentTypes(user.id)
       
-      if (error) {
-        console.error('Error loading custom assessments:', error)
-      } else {
-        // Get question counts for custom assessments
-        const assessmentsWithCounts = (data || []).map(assessment => {
-          const stats = questionManager.getQuestionStats(assessment.id)
-          return {
-            ...assessment,
-            questionCount: stats.total
-          }
-        })
-        setCustomAssessments(assessmentsWithCounts)
+      // Load custom assessment types
+      const { data: assessmentTypes, error: assessmentError } = await assessmentTypesService.getUserAssessmentTypes(user.id)
+      
+      if (assessmentError) {
+        console.error('Error loading custom assessments:', assessmentError)
+        setCustomAssessments([])
+        return
       }
+
+      // Load question counts from database
+      const { questionsService } = await import('../services/database')
+      const { data: questionStats, error: statsError } = await questionsService.getQuestionStats(user.id)
+      
+      if (statsError) {
+        console.error('Error loading question stats:', statsError)
+      }
+
+      // Combine assessment types with question counts
+      const assessmentsWithCounts = (assessmentTypes || []).map(assessment => ({
+        ...assessment,
+        questionCount: questionStats?.[assessment.name] || 0
+      }))
+
+      setCustomAssessments(assessmentsWithCounts)
+      
+      // Set question counts for easy access
+      const counts = {}
+      assessmentsWithCounts.forEach(assessment => {
+        counts[assessment.id] = assessment.questionCount
+      })
+      setQuestionCounts(counts)
+      
     } catch (error) {
       console.error('Error loading custom assessments:', error)
+      setCustomAssessments([])
+      setQuestionCounts({})
     } finally {
       setLoading(false)
     }

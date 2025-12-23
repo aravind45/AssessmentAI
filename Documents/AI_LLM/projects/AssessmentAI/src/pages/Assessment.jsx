@@ -21,7 +21,33 @@ const Assessment = () => {
   const [assessmentStartTime, setAssessmentStartTime] = useState(null)
 
   const { user } = useAuth()
-  const questions = questionManager.getQuestions(type) || []
+  const [questions, setQuestions] = useState([])
+  
+  // Load questions based on assessment type
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        // Check if this is a UUID (custom assessment)
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(type)
+        
+        if (isUUID) {
+          // Load custom questions from database
+          const { databaseQuestionManager } = await import('../utils/databaseQuestionManager')
+          const customQuestions = await databaseQuestionManager.getQuestions(type)
+          setQuestions(customQuestions || [])
+        } else {
+          // Load built-in questions
+          const builtInQuestions = questionManager.getQuestions(type) || []
+          setQuestions(builtInQuestions)
+        }
+      } catch (error) {
+        console.error('Error loading questions:', error)
+        setQuestions([])
+      }
+    }
+    
+    loadQuestions()
+  }, [type])
   
   // Track page visit
   usePageTracking(`Assessment - ${type}`)

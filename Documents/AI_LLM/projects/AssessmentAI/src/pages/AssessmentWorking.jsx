@@ -45,7 +45,23 @@ const AssessmentWorking = () => {
         if (assessment) {
           setAssessmentName(assessment.name)
           
-          // Load questions from database
+          // First try localStorage (where your questions actually are)
+          try {
+            const stored = localStorage.getItem('customQuestions')
+            const customQuestions = stored ? JSON.parse(stored) : {}
+            const questionsForAssessment = customQuestions[type] || []
+            
+            if (questionsForAssessment.length > 0) {
+              console.log('Found questions in localStorage:', questionsForAssessment.length)
+              setQuestions(questionsForAssessment)
+              setLoading(false)
+              return
+            }
+          } catch (error) {
+            console.error('Error loading from localStorage:', error)
+          }
+          
+          // If no localStorage questions, try database
           const { supabase } = await import('../lib/supabase')
           const { data: questionsData } = await supabase
             .from('custom_questions')
@@ -54,6 +70,7 @@ const AssessmentWorking = () => {
             .order('created_at')
           
           if (questionsData && questionsData.length > 0) {
+            console.log('Found questions in database:', questionsData.length)
             const formattedQuestions = questionsData.map((q, index) => ({
               id: q.id,
               title: `Question ${index + 1}`,
@@ -65,6 +82,7 @@ const AssessmentWorking = () => {
             }))
             setQuestions(formattedQuestions)
           } else {
+            console.log('No questions found in localStorage or database')
             setQuestions([])
           }
         }

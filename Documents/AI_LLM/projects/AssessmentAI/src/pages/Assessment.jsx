@@ -35,59 +35,31 @@ const Assessment = () => {
           return
         }
 
-        // Direct database fetch - no complex logic
+        // Direct database fetch using custom_assessment_id
         const { supabase } = await import('../lib/supabase')
         
-        // Get all questions for this user
-        const { data: allQuestions, error } = await supabase
+        console.log('Loading questions for assessment ID:', type)
+        
+        // Get questions directly by custom_assessment_id
+        const { data: questionsData, error: questionsError } = await supabase
           .from('custom_questions')
           .select('*')
           .eq('user_id', user.id)
+          .eq('custom_assessment_id', type)
         
-        if (error) {
-          console.error('Database error:', error)
+        console.log('Questions query result:', { questionsData, questionsError })
+        
+        if (questionsError) {
+          console.error('Database error:', questionsError)
           setQuestions([])
-          setLoading(false)
-          return
-        }
-        
-        console.log('All questions from database:', allQuestions)
-        
-        // Check if this is a UUID (custom assessment)
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(type)
-        
-        if (isUUID) {
-          // Get the assessment type info
-          const { data: assessmentTypes } = await supabase
-            .from('custom_assessment_types')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('id', type)
-            .single()
-          
-          if (assessmentTypes) {
-            console.log('Assessment type found:', assessmentTypes)
-            
-            // Filter questions by assessment name
-            const matchingQuestions = allQuestions.filter(q => 
-              q.assessment_type === assessmentTypes.name
-            )
-            
-            console.log(`Questions for "${assessmentTypes.name}":`, matchingQuestions)
-            
-            // Transform to question format
-            const questions = matchingQuestions.map(record => record.question_data)
-            console.log('Final questions:', questions)
-            
-            setQuestions(questions)
-          } else {
-            console.log('Assessment type not found for UUID:', type)
-            setQuestions([])
-          }
+        } else if (questionsData && questionsData.length > 0) {
+          // Transform to question format
+          const questions = questionsData.map(record => record.question_data)
+          console.log('Loaded questions:', questions)
+          setQuestions(questions)
         } else {
-          // Built-in assessment - use old logic
-          const builtInQuestions = questionManager.getQuestions(type) || []
-          setQuestions(builtInQuestions)
+          console.log('No questions found for assessment ID:', type)
+          setQuestions([])
         }
         
       } catch (error) {

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Assessment Data</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Find Assessment Data</h1>
+    <div id="output"></div>
+    <button onclick="findAllData()" style="padding: 10px 20px; font-size: 16px; margin: 10px;">
+        🔍 Find All Data
+    </button>
+    
+    <script>
+        const supabaseUrl = 'https://chktzonseacamniddifq.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoa3R6b25zZWFjYW1uaWRkaWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4MTM0OTgsImV4cCI6MjA4MTM4OTQ5OH0.ls993dsdw6Trf_pHVxNyuYceXki7o4hD_TkLF3FQGv4'
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        
+        async function findAllData() {
+            const output = document.getElementById('output')
+            output.innerHTML = '<h3>Searching for data...</h3>'
+            
+            try {
+                // Check authentication
+                const { data: { user }, error: authError } = await supabase.auth.getUser()
+                if (authError || !user) {
+                    output.innerHTML += '<p style="color: red;">Please log in first!</p>'
+                    return
+                }
+                
+                output.innerHTML += `<p><strong>User:</strong> ${user.email} (${user.id})</p>`
+                
+                // 1. Check localStorage
+                output.innerHTML += '<h3>1. localStorage Data:</h3>'
+                
+                const localStorageKeys = Object.keys(localStorage)
+                output.innerHTML += `<p>Total localStorage keys: ${localStorageKeys.length}</p>`
+                
+                localStorageKeys.forEach(key => {
+                    const value = localStorage.getItem(key)
+                    if (key.includes('assessment') || key.includes('question') || key.includes('custom')) {
+                        output.innerHTML += `<p><strong>${key}:</strong> ${value ? value.substring(0, 100) + '...' : 'null'}</p>`
+                    }
+                })
+                
+                // 2. Check database - custom_assessment_types
+                output.innerHTML += '<h3>2. Database - Assessment Types:</h3>'
+                const { data: dbTypes, error: typesError } = await supabase
+                    .from('custom_assessment_types')
+                    .select('*')
+                    .eq('user_id', user.id)
+                
+                if (typesError) {
+                    output.innerHTML += `<p style="color: red;">Error: ${typesError.message}</p>`
+                } else {
+                    output.innerHTML += `<p>Found ${dbTypes?.length || 0} assessment types in database</p>`
+                    if (dbTypes && dbTypes.length > 0) {
+                        dbTypes.forEach(type => {
+                            output.innerHTML += `<p>- ${type.name} (ID: ${type.id})</p>`
+                        })
+                    }
+                }
+                
+                // 3. Check database - custom_questions
+                output.innerHTML += '<h3>3. Database - Questions:</h3>'
+                const { data: dbQuestions, error: questionsError } = await supabase
+                    .from('custom_questions')
+                    .select('*')
+                    .eq('user_id', user.id)
+                
+                if (questionsError) {
+                    output.innerHTML += `<p style="color: red;">Error: ${questionsError.message}</p>`
+                } else {
+                    output.innerHTML += `<p>Found ${dbQuestions?.length || 0} questions in database</p>`
+                    if (dbQuestions && dbQuestions.length > 0) {
+                        const questionsByType = {}
+                        dbQuestions.forEach(q => {
+                            if (!questionsByType[q.assessment_type]) {
+                                questionsByType[q.assessment_type] = 0
+                            }
+                            questionsByType[q.assessment_type]++
+                        })
+                        
+                        Object.entries(questionsByType).forEach(([type, count]) => {
+                            output.innerHTML += `<p>- ${type}: ${count} questions</p>`
+                        })
+                    }
+                }
+                
+                // 4. Check sessionStorage
+                output.innerHTML += '<h3>4. sessionStorage Data:</h3>'
+                const sessionKeys = Object.keys(sessionStorage)
+                output.innerHTML += `<p>Total sessionStorage keys: ${sessionKeys.length}</p>`
+                
+                sessionKeys.forEach(key => {
+                    const value = sessionStorage.getItem(key)
+                    if (key.includes('assessment') || key.includes('question') || key.includes('custom')) {
+                        output.innerHTML += `<p><strong>${key}:</strong> ${value ? value.substring(0, 100) + '...' : 'null'}</p>`
+                    }
+                })
+                
+                // 5. Check if data is in different format
+                output.innerHTML += '<h3>5. Alternative Data Locations:</h3>'
+                
+                // Check for any keys that might contain assessment data
+                const allKeys = [...localStorageKeys, ...sessionKeys]
+                const suspiciousKeys = allKeys.filter(key => 
+                    key.toLowerCase().includes('lora') || 
+                    key.toLowerCase().includes('rag') ||
+                    key.toLowerCase().includes('question') ||
+                    key.toLowerCase().includes('assessment')
+                )
+                
+                if (suspiciousKeys.length > 0) {
+                    output.innerHTML += '<p>Suspicious keys found:</p>'
+                    suspiciousKeys.forEach(key => {
+                        const value = localStorage.getItem(key) || sessionStorage.getItem(key)
+                        output.innerHTML += `<p><strong>${key}:</strong> ${value ? value.substring(0, 200) + '...' : 'null'}</p>`
+                    })
+                } else {
+                    output.innerHTML += '<p>No suspicious keys found</p>'
+                }
+                
+                // 6. Summary
+                output.innerHTML += '<h3>6. Summary:</h3>'
+                const totalDbTypes = dbTypes?.length || 0
+                const totalDbQuestions = dbQuestions?.length || 0
+                
+                if (totalDbTypes === 0 && totalDbQuestions === 0) {
+                    output.innerHTML += '<p style="color: red;"><strong>Problem:</strong> No data found in database or localStorage!</p>'
+                    output.innerHTML += '<p>This explains why assessments appear in UI but don\'t work.</p>'
+                    output.innerHTML += '<p><strong>Next step:</strong> You need to re-upload your questions through Question Manager.</p>'
+                } else if (totalDbTypes > 0 && totalDbQuestions > 0) {
+                    output.innerHTML += '<p style="color: green;"><strong>Good:</strong> Data found in database!</p>'
+                    output.innerHTML += '<p>Assessment loading should work. Check Assessment.jsx logic.</p>'
+                } else {
+                    output.innerHTML += '<p style="color: orange;"><strong>Partial:</strong> Some data found but incomplete.</p>'
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">Search failed: ${error.message}</p>`
+                console.error('Search error:', error)
+            }
+        }
+    </script>
+</body>
+</html>

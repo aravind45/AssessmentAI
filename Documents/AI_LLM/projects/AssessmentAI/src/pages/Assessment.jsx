@@ -175,7 +175,7 @@ const Assessment = () => {
 
       <div style={{ display: 'flex', gap: '24px' }}>
         {/* Main Content */}
-        <div style={{ flex: showAIPanel ? '1' : '1', minWidth: 0 }}>
+        <div style={{ flex: '1', minWidth: 0 }}>
           {/* Question */}
           <div className="card" style={{ marginBottom: '20px' }}>
             <h3>{question.title || question.statement}</h3>
@@ -276,17 +276,14 @@ const Assessment = () => {
             )}
           </div>
         </div>
-
-        {/* AI Help Panel */}
-        {showAIPanel && (
-          <div style={{ width: '400px', flexShrink: 0 }}>
-            <AIHintPanel 
-              question={question}
-              onClose={() => setShowAIPanel(false)}
-            />
-          </div>
-        )}
       </div>
+
+      {/* AI Help Panel - Fixed Position Overlay */}
+      <AIHintPanel 
+        question={question}
+        isVisible={showAIPanel}
+        onToggle={() => setShowAIPanel(!showAIPanel)}
+      />
     </div>
   )
 }

@@ -151,6 +151,146 @@ Explanation:`
     }
   },
 
+  // Generate multiple choice questions for a topic
+  async generateQuestions(topic, numberOfQuestions = 5, difficulty = 'Mixed') {
+    try {
+      console.log('=== GROQ AI QUESTION GENERATION ===')
+      console.log('Topic:', topic)
+      console.log('Number of questions:', numberOfQuestions)
+      console.log('Difficulty:', difficulty)
+      
+      const difficultyInstruction = difficulty === 'Mixed' 
+        ? 'Mix of Easy, Medium, and Hard questions'
+        : `All questions should be ${difficulty} difficulty`
+
+      const prompt = `You are an expert educator and assessment designer. Generate exactly ${numberOfQuestions} high-quality multiple choice questions about "${topic}".
+
+Requirements:
+- ${difficultyInstruction}
+- Each question must have exactly 4 options (A, B, C, D)
+- Only one correct answer per question
+- Questions should test understanding, not just memorization
+- Include a brief explanation for each correct answer
+
+IMPORTANT: Return ONLY a valid JSON array with no additional text, markdown, or formatting.
+
+JSON Format:
+[
+  {
+    "title": "Short question title",
+    "difficulty": "Easy|Medium|Hard",
+    "description": "The full question text",
+    "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
+    "correctAnswer": 0,
+    "explanation": "Brief explanation of why this is correct"
+  }
+]
+
+Note: correctAnswer is a 0-based index (0 for A, 1 for B, 2 for C, 3 for D).
+
+Generate ${numberOfQuestions} questions about "${topic}" now:`
+
+      console.log('🚀 Sending question generation prompt to Groq...')
+      
+      // Use higher max tokens for generating multiple questions
+      const maxTokens = Math.min(4000, numberOfQuestions * 500)
+      const result = await this.callGroqAPI(prompt, maxTokens)
+      
+      if (!result) {
+        console.error('❌ No result from Groq API')
+        return { success: false, error: 'Failed to generate questions. Please try again.' }
+      }
+
+      console.log('📝 Raw result:', result)
+      
+      // Parse the JSON response
+      try {
+        // Clean up the response - remove any markdown formatting
+        let cleanedResult = result.trim()
+        
+        // Remove markdown code blocks if present
+        if (cleanedResult.startsWith('```json')) {
+          cleanedResult = cleanedResult.slice(7)
+        } else if (cleanedResult.startsWith('```')) {
+          cleanedResult = cleanedResult.slice(3)
+        }
+        if (cleanedResult.endsWith('```')) {
+          cleanedResult = cleanedResult.slice(0, -3)
+        }
+        cleanedResult = cleanedResult.trim()
+        
+        // Find the JSON array in the response
+        const jsonStart = cleanedResult.indexOf('[')
+        const jsonEnd = cleanedResult.lastIndexOf(']')
+        
+        if (jsonStart === -1 || jsonEnd === -1) {
+          throw new Error('No valid JSON array found in response')
+        }
+        
+        const jsonString = cleanedResult.slice(jsonStart, jsonEnd + 1)
+        const questions = JSON.parse(jsonString)
+        
+        if (!Array.isArray(questions) || questions.length === 0) {
+          throw new Error('Invalid questions format')
+        }
+
+        // Validate and format questions
+        const formattedQuestions = questions.map((q, index) => ({
+          id: Date.now() + index,
+          title: q.title || `Question ${index + 1}`,
+          difficulty: q.difficulty || 'Medium',
+          description: q.description || q.question || q.title,
+          example: q.example || '',
+          type: 'multiple-choice',
+          options: q.options || [],
+          correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
+          explanation: q.explanation || 'No explanation provided.',
+          isCustom: true,
+          isAIGenerated: true
+        }))
+
+        // Validate each question has required fields
+        const validQuestions = formattedQuestions.filter(q => 
+          q.title && 
+          q.description && 
+          Array.isArray(q.options) && 
+          q.options.length === 4 &&
+          typeof q.correctAnswer === 'number' &&
+          q.correctAnswer >= 0 && 
+          q.correctAnswer <= 3
+        )
+
+        if (validQuestions.length === 0) {
+          throw new Error('No valid questions could be parsed')
+        }
+
+        console.log(`✅ Successfully generated ${validQuestions.length} questions`)
+        
+        return { 
+          success: true, 
+          questions: validQuestions,
+          generated: validQuestions.length,
+          requested: numberOfQuestions
+        }
+        
+      } catch (parseError) {
+        console.error('❌ Failed to parse AI response:', parseError)
+        console.error('Raw response was:', result)
+        return { 
+          success: false, 
+          error: 'Failed to parse AI response. The AI may have returned an invalid format. Please try again.'
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Question generation failed:', error)
+      return { 
+        success: false, 
+        error: error.message || 'An unexpected error occurred while generating questions.'
+      }
+    }
+  },
+
   formatHint(hint) {
     return `💡 **AI-Generated Hint:**
 

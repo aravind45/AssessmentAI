@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Brain, Settings, LogOut, User, BarChart3, Shield } from 'lucide-react'
+import { Brain, Settings, LogOut, User, BarChart3, Shield, Sparkles } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { isAdmin } from '../config/admin'
 
@@ -69,6 +69,21 @@ const Header = () => {
               
               {user ? (
                 <>
+                  <Link 
+                    to="/ai-generate"
+                    style={{
+                      color: '#8b5cf6',
+                      textDecoration: 'none',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Sparkles size={16} />
+                    AI Generate
+                  </Link>
                   <Link 
                     to="/dashboard"
                     style={{
@@ -214,6 +229,23 @@ const Header = () => {
             
             {user ? (
               <>
+                <Link 
+                  to="/ai-generate" 
+                  className="btn"
+                  style={{
+                    color: location.pathname === '/ai-generate' ? '#8b5cf6' : '#8b5cf6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: location.pathname === '/ai-generate' ? '#f3e8ff' : 'transparent',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    fontWeight: '500'
+                  }}
+                >
+                  <Sparkles size={16} />
+                  AI Generate
+                </Link>
                 <Link 
                   to="/dashboard" 
                   className="btn btn-secondary"

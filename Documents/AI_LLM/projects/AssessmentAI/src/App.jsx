@@ -17,6 +17,7 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import AuthCallback from './pages/AuthCallback'
+import AIGenerate from './pages/AIGenerate'
 
 // Analytics wrapper component
 const AnalyticsWrapper = ({ children }) => {
@@ -38,6 +39,11 @@ function App() {
               <Route path="/assessment/:type" element={<Assessment />} />
               <Route path="/assessment-debug/:type" element={<AssessmentWorking />} />
               <Route path="/results" element={<Results />} />
+              <Route path="/ai-generate" element={
+                <ProtectedRoute>
+                  <AIGenerate />
+                </ProtectedRoute>
+              } />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />

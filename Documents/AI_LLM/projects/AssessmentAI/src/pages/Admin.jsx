@@ -1,111 +1,107 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, FileText, BarChart3, Settings, Shield, Database, AlertTriangle, CheckCircle, Eye, EyeOff, Trash2, Plus, Edit2, Upload } from 'lucide-react'
-import { resultsService, assessmentTypesService, questionsService } from '../services/database'
+import { 
+  Users, 
+  FileText, 
+  BarChart3, 
+  Settings, 
+  Shield, 
+  Database, 
+  AlertTriangle, 
+  CheckCircle, 
+  Eye, 
+  EyeOff, 
+  Trash2, 
+  Plus, 
+  Edit2, 
+  RefreshCw,
+  Sparkles
+} from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { isAdmin } from '../config/admin'
 import CreateAssessmentType from '../components/CreateAssessmentType'
 import EditAssessmentType from '../components/EditAssessmentType'
-import MigrateAssessments from '../components/MigrateAssessments'
 
 const Admin = () => {
-  const [stats, setStats] = useState(null)
-  const [users, setUsers] = useState([])
-  const [publicAssessments, setPublicAssessments] = useState([])
-  const [recentActivity, setRecentActivity] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('overview')
-  const [selectedAssessments, setSelectedAssessments] = useState(new Set())
-  const [showCreateAssessment, setShowCreateAssessment] = useState(false)
-  const [editingAssessment, setEditingAssessment] = useState(null)
-  const [showMigration, setShowMigration] = useState(false)
-
   const { user } = useAuth()
   const navigate = useNavigate()
 
+  // State
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAssessments: 0,
+    totalQuestions: 0,
+    totalResults: 0
+  })
+  const [users, setUsers] = useState([])
+  const [assessments, setAssessments] = useState([])
+  const [recentResults, setRecentResults] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('overview')
+  const [refreshing, setRefreshing] = useState(false)
+
+  // Modals
+  const [showCreateAssessment, setShowCreateAssessment] = useState(false)
+  const [editingAssessment, setEditingAssessment] = useState(null)
+
+  // Check admin access
   useEffect(() => {
-    // Check if user is admin
-    if (!user || !isAdmin(user)) {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    if (!isAdmin(user)) {
       navigate('/')
       return
     }
-
-    // Simple direct loading without complex functions
-    loadSimpleData()
+    loadAllData()
   }, [user, navigate])
 
-  const loadSimpleData = async () => {
+  const loadAllData = async () => {
+    setLoading(true)
+    setError('')
+    
     try {
-      setLoading(true)
-      console.log('Loading assessments using the same method as QuestionManager...')
-      
-      // Use the SAME method that works in QuestionManager
-      const { data, error } = await assessmentTypesService.getUserAssessmentTypes(user.id)
-      
-      console.log('Assessment service result:', { data, error })
-
-      if (error) {
-        console.error('Error loading assessments:', error)
-        setError(error.message)
-      } else {
-        // Add simple profile info
-        const assessmentsWithProfiles = (data || []).map(assessment => ({
-          ...assessment,
-          profiles: { 
-            full_name: 'You', 
-            email: user?.email || 'user@example.com'
-          }
-        }))
-        
-        console.log('Final assessments for admin:', assessmentsWithProfiles)
-        setPublicAssessments(assessmentsWithProfiles)
-        setError('')
-      }
+      await Promise.all([
+        loadStats(),
+        loadUsers(),
+        loadAssessments(),
+        loadRecentResults()
+      ])
     } catch (err) {
-      console.error('Load error:', err)
-      setError(err.message)
+      console.error('Error loading admin data:', err)
+      setError('Some data failed to load. Check console for details.')
     } finally {
       setLoading(false)
     }
   }
 
-  const loadAdminData = async () => {
-    // Redirect to simple loading - no complex queries
-    await loadSimpleData()
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await loadAllData()
+    setRefreshing(false)
   }
 
-  const loadSystemStats = async () => {
+  const loadStats = async () => {
     try {
-      // Get total users
-      const { count: userCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-
-      // Get total assessments taken
-      const { count: assessmentCount } = await supabase
-        .from('assessment_results')
-        .select('*', { count: 'exact', head: true })
-
-      // Get total custom assessment types
-      const { count: customAssessmentCount } = await supabase
-        .from('custom_assessment_types')
-        .select('*', { count: 'exact', head: true })
-
-      // Get total custom questions
-      const { count: customQuestionCount } = await supabase
-        .from('custom_questions')
-        .select('*', { count: 'exact', head: true })
+      // Get counts using count queries
+      const [usersRes, assessmentsRes, questionsRes, resultsRes] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('custom_assessment_types').select('*', { count: 'exact', head: true }),
+        supabase.from('custom_questions').select('*', { count: 'exact', head: true }),
+        supabase.from('assessment_results').select('*', { count: 'exact', head: true })
+      ])
 
       setStats({
-        totalUsers: userCount || 0,
-        totalAssessments: assessmentCount || 0,
-        customAssessmentTypes: customAssessmentCount || 0,
-        customQuestions: customQuestionCount || 0
+        totalUsers: usersRes.count || 0,
+        totalAssessments: assessmentsRes.count || 0,
+        totalQuestions: questionsRes.count || 0,
+        totalResults: resultsRes.count || 0
       })
     } catch (error) {
-      console.error('Error loading system stats:', error)
+      console.error('Error loading stats:', error)
     }
   }
 
@@ -115,467 +111,396 @@ const Admin = () => {
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50)
 
-      if (error) throw error
-      setUsers(data || [])
+      if (error) {
+        console.error('Error loading users:', error)
+        // If RLS blocks us, at least show current user
+        if (user) {
+          setUsers([{
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || 'Current User',
+            created_at: user.created_at
+          }])
+        }
+      } else {
+        setUsers(data || [])
+      }
     } catch (error) {
       console.error('Error loading users:', error)
     }
   }
 
-  const loadPublicAssessments = async () => {
-    console.log('Redirecting to simple data loading')
-    // This function is now handled by loadSimpleData
-  }
-
-  const loadRecentActivity = async () => {
-    console.log('Skipping recent activity loading for now')
-    setRecentActivity([])
-  }
-
-  const toggleAssessmentVisibility = async (assessmentId, currentVisibility) => {
+  const loadAssessments = async () => {
     try {
-      const { error } = await supabase
+      // First try to get all assessments (for admin)
+      let { data, error } = await supabase
         .from('custom_assessment_types')
-        .update({ is_public: !currentVisibility })
-        .eq('id', assessmentId)
+        .select(`
+          *,
+          profiles:user_id (
+            email,
+            full_name
+          )
+        `)
+        .order('created_at', { ascending: false })
 
-      if (error) throw error
-      
-      // Reload assessments
-      await loadPublicAssessments()
-      
-      const action = !currentVisibility ? 'made public' : 'made private'
-      alert(`✅ Assessment ${action} successfully!`)
+      if (error) {
+        console.error('Error with join query, trying simple query:', error)
+        // Fallback to simple query without join
+        const simpleResult = await supabase
+          .from('custom_assessment_types')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        data = simpleResult.data
+        error = simpleResult.error
+      }
+
+      if (error) {
+        console.error('Error loading assessments:', error)
+        setAssessments([])
+      } else {
+        setAssessments(data || [])
+      }
     } catch (error) {
-      alert(`❌ Error updating assessment: ${error.message}`)
+      console.error('Error loading assessments:', error)
+      setAssessments([])
     }
   }
 
-  const deleteAssessment = async (assessmentId, assessmentName) => {
-    if (!window.confirm(`Are you sure you want to delete "${assessmentName}"? This will also delete all associated questions and results.`)) {
+  const loadRecentResults = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('assessment_results')
+        .select(`
+          *,
+          profiles:user_id (
+            email,
+            full_name
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (error) {
+        console.error('Error loading results:', error)
+        setRecentResults([])
+      } else {
+        setRecentResults(data || [])
+      }
+    } catch (error) {
+      console.error('Error loading results:', error)
+      setRecentResults([])
+    }
+  }
+
+  const toggleAssessmentVisibility = async (assessment) => {
+    try {
+      const newVisibility = !assessment.is_public
+      
+      const { error } = await supabase
+        .from('custom_assessment_types')
+        .update({ is_public: newVisibility })
+        .eq('id', assessment.id)
+
+      if (error) throw error
+
+      // Update local state
+      setAssessments(prev => prev.map(a => 
+        a.id === assessment.id ? { ...a, is_public: newVisibility } : a
+      ))
+
+      alert(`✅ Assessment "${assessment.name}" is now ${newVisibility ? 'PUBLIC' : 'PRIVATE'}`)
+    } catch (error) {
+      console.error('Error updating assessment:', error)
+      alert(`❌ Error: ${error.message}`)
+    }
+  }
+
+  const deleteAssessment = async (assessment) => {
+    if (!window.confirm(`Delete "${assessment.name}"?\n\nThis will also delete all questions and results for this assessment. This cannot be undone.`)) {
       return
     }
 
     try {
+      // Delete questions first (due to foreign key)
+      await supabase
+        .from('custom_questions')
+        .delete()
+        .eq('custom_assessment_id', assessment.id)
+
+      // Delete assessment
       const { error } = await supabase
         .from('custom_assessment_types')
         .delete()
-        .eq('id', assessmentId)
+        .eq('id', assessment.id)
 
       if (error) throw error
+
+      // Update local state
+      setAssessments(prev => prev.filter(a => a.id !== assessment.id))
       
-      // Reload assessments
-      await loadPublicAssessments()
-      
-      alert(`✅ Assessment "${assessmentName}" deleted successfully!`)
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        totalAssessments: prev.totalAssessments - 1
+      }))
+
+      alert(`✅ Assessment "${assessment.name}" deleted successfully!`)
     } catch (error) {
-      alert(`❌ Error deleting assessment: ${error.message}`)
+      console.error('Error deleting assessment:', error)
+      alert(`❌ Error: ${error.message}`)
     }
-  }
-
-  const handleBulkMakePublic = async () => {
-    if (selectedAssessments.size === 0) return
-    
-    if (!window.confirm(`Make ${selectedAssessments.size} selected assessments public?`)) {
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('custom_assessment_types')
-        .update({ is_public: true })
-        .in('id', Array.from(selectedAssessments))
-
-      if (error) throw error
-      
-      await loadPublicAssessments()
-      setSelectedAssessments(new Set())
-      
-      alert(`✅ ${selectedAssessments.size} assessments made public successfully!`)
-    } catch (error) {
-      alert(`❌ Error updating assessments: ${error.message}`)
-    }
-  }
-
-  const handleBulkMakePrivate = async () => {
-    if (selectedAssessments.size === 0) return
-    
-    if (!window.confirm(`Make ${selectedAssessments.size} selected assessments private?`)) {
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('custom_assessment_types')
-        .update({ is_public: false })
-        .in('id', Array.from(selectedAssessments))
-
-      if (error) throw error
-      
-      await loadPublicAssessments()
-      setSelectedAssessments(new Set())
-      
-      alert(`✅ ${selectedAssessments.size} assessments made private successfully!`)
-    } catch (error) {
-      alert(`❌ Error updating assessments: ${error.message}`)
-    }
-  }
-
-  const handleSelectAssessment = (assessmentId, isSelected) => {
-    const newSelected = new Set(selectedAssessments)
-    if (isSelected) {
-      newSelected.add(assessmentId)
-    } else {
-      newSelected.delete(assessmentId)
-    }
-    setSelectedAssessments(newSelected)
-  }
-
-  const handleSelectAllAssessments = (isSelected) => {
-    if (isSelected) {
-      setSelectedAssessments(new Set(publicAssessments.map(a => a.id)))
-    } else {
-      setSelectedAssessments(new Set())
-    }
-  }
-
-  const handleCreateAssessment = () => {
-    setShowCreateAssessment(true)
-  }
-
-  const handleMigrationComplete = () => {
-    // Reload assessments after migration
-    loadPublicAssessments()
-    setShowMigration(false)
   }
 
   const handleAssessmentCreated = (newAssessment) => {
-    // Reload assessments
-    loadPublicAssessments()
-    // Show success message
-    alert(`✅ Successfully created "${newAssessment.name}" assessment!`)
+    setAssessments(prev => [newAssessment, ...prev])
+    setStats(prev => ({ ...prev, totalAssessments: prev.totalAssessments + 1 }))
+    setShowCreateAssessment(false)
   }
 
-  const handleEditAssessment = (assessment) => {
-    setEditingAssessment(assessment)
-  }
-
-  const handleAssessmentUpdated = (updatedAssessment) => {
-    // Reload assessments
-    loadPublicAssessments()
-    // Show success message
-    alert(`✅ Successfully updated "${updatedAssessment.name}" assessment!`)
-  }
-
-  const handleBulkDelete = async () => {
-    if (selectedAssessments.size === 0) return
-    
-    const confirmMessage = `⚠️ DELETE ${selectedAssessments.size} ASSESSMENTS?\n\n` +
-      `This will permanently delete the selected assessments and all their questions.\n` +
-      `This action cannot be undone!\n\n` +
-      `Are you sure you want to proceed?`
-    
-    if (!window.confirm(confirmMessage)) {
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('custom_assessment_types')
-        .delete()
-        .in('id', Array.from(selectedAssessments))
-
-      if (error) throw error
-      
-      await loadPublicAssessments()
-      setSelectedAssessments(new Set())
-      
-      alert(`✅ Successfully deleted ${selectedAssessments.size} assessments!`)
-    } catch (error) {
-      alert(`❌ Error deleting assessments: ${error.message}`)
-    }
+  const handleAssessmentUpdated = (updated) => {
+    setAssessments(prev => prev.map(a => a.id === updated.id ? updated : a))
+    setEditingAssessment(null)
   }
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     })
-  }
-
-  if (!user || !isAdmin(user)) {
-    return (
-      <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <Shield size={64} color="#f44336" style={{ marginBottom: '16px' }} />
-        <h2>Access Denied</h2>
-        <p>You don't have permission to access the admin panel.</p>
-      </div>
-    )
   }
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <h2>Loading admin panel...</h2>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="container" style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <AlertTriangle size={64} color="#f44336" style={{ marginBottom: '16px' }} />
-        <h2>Error loading admin data</h2>
-        <p style={{ color: '#f44336' }}>{error}</p>
-        <button onClick={loadAdminData} className="btn btn-primary">
-          Try Again
-        </button>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '60vh',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <RefreshCw size={32} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
+        <p style={{ color: '#666' }}>Loading admin dashboard...</p>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
   return (
-    <div className="container" style={{ padding: '40px 20px' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 20px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ 
-          fontSize: '32px', 
-          fontWeight: '600', 
-          color: '#333',
-          marginBottom: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <Shield size={32} color="#f6d55c" />
-          Admin Dashboard
-        </h1>
-        <p style={{ color: '#666', fontSize: '16px' }}>
-          System overview and management tools
-        </p>
-      </div>
-
-      {/* Navigation Tabs */}
       <div style={{ 
         display: 'flex', 
-        gap: '16px',
-        marginBottom: '32px',
-        borderBottom: '1px solid #e0e0e0'
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '24px'
+      }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#333', margin: 0 }}>
+            <Shield size={28} style={{ marginRight: '12px', verticalAlign: 'middle' }} />
+            Admin Dashboard
+          </h1>
+          <p style={{ color: '#666', margin: '8px 0 0' }}>
+            Manage users, assessments, and system settings
+          </p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            background: '#f3f4f6',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}
+        >
+          <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          color: '#dc2626'
+        }}>
+          <AlertTriangle size={18} />
+          {error}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        marginBottom: '24px',
+        borderBottom: '1px solid #e5e7eb',
+        paddingBottom: '12px'
       }}>
         {[
           { id: 'overview', label: 'Overview', icon: BarChart3 },
           { id: 'users', label: 'Users', icon: Users },
-          { id: 'assessments', label: 'All Assessments', icon: FileText },
-          { id: 'migration', label: 'Migrate Data', icon: Upload },
-          { id: 'activity', label: 'Recent Activity', icon: Database }
-        ].map(tab => {
-          const IconComponent = tab.icon
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px 16px',
-                background: 'none',
-                border: 'none',
-                borderBottom: activeTab === tab.id ? '2px solid #f6d55c' : '2px solid transparent',
-                color: activeTab === tab.id ? '#f6d55c' : '#666',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}
-            >
-              <IconComponent size={20} />
-              {tab.label}
-            </button>
-          )
-        })}
+          { id: 'assessments', label: 'Assessments', icon: FileText },
+          { id: 'activity', label: 'Activity', icon: Database }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              background: activeTab === tab.id ? '#667eea' : 'transparent',
+              color: activeTab === tab.id ? 'white' : '#666',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s'
+            }}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Overview Tab */}
-      {activeTab === 'overview' && stats && (
+      {activeTab === 'overview' && (
         <div>
-          <div style={{ 
-            display: 'grid', 
+          {/* Stats Grid */}
+          <div style={{
+            display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '24px',
-            marginBottom: '40px'
+            gap: '20px',
+            marginBottom: '32px'
           }}>
-            <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-              <Users size={32} color="#4285f4" style={{ marginBottom: '12px' }} />
-              <div style={{ fontSize: '28px', fontWeight: '600', color: '#4285f4' }}>
-                {stats.totalUsers}
+            {[
+              { label: 'Total Users', value: stats.totalUsers, icon: Users, color: '#667eea' },
+              { label: 'Assessments', value: stats.totalAssessments, icon: FileText, color: '#f6d55c' },
+              { label: 'Questions', value: stats.totalQuestions, icon: Database, color: '#4db6ac' },
+              { label: 'Results', value: stats.totalResults, icon: BarChart3, color: '#ff8a65' }
+            ].map((stat, index) => (
+              <div
+                key={index}
+                style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  border: '1px solid #e5e7eb'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '12px',
+                    background: `${stat.color}20`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <stat.icon size={24} color={stat.color} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '32px', fontWeight: '700', color: '#333' }}>
+                  {stat.value}
+                </div>
+                <div style={{ fontSize: '14px', color: '#666' }}>
+                  {stat.label}
+                </div>
               </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                Total Users
-              </div>
-            </div>
-
-            <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-              <BarChart3 size={32} color="#34a853" style={{ marginBottom: '12px' }} />
-              <div style={{ fontSize: '28px', fontWeight: '600', color: '#34a853' }}>
-                {stats.totalAssessments}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                Assessments Taken
-              </div>
-            </div>
-
-            <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-              <FileText size={32} color="#fbbc04" style={{ marginBottom: '12px' }} />
-              <div style={{ fontSize: '28px', fontWeight: '600', color: '#fbbc04' }}>
-                {stats.customAssessmentTypes}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                Custom Assessment Types
-              </div>
-            </div>
-
-            <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-              <Database size={32} color="#ea4335" style={{ marginBottom: '12px' }} />
-              <div style={{ fontSize: '28px', fontWeight: '600', color: '#ea4335' }}>
-                {stats.customQuestions}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                Custom Questions
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* Quick Actions */}
-          <div className="card" style={{ marginTop: '32px' }}>
-            <h3 style={{ marginBottom: '20px', color: '#333' }}>Quick Actions</h3>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px'
-            }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>
+              Quick Actions
+            </h3>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button
-                onClick={handleCreateAssessment}
+                onClick={() => setShowCreateAssessment(true)}
                 style={{
-                  background: '#f6d55c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  padding: '16px',
                   cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                <Plus size={18} />
+                Create Assessment
+              </button>
+              <button
+                onClick={() => navigate('/ai-generate')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                <Sparkles size={18} />
+                AI Generate
+              </button>
+              <button
+                onClick={() => navigate('/questions')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: '#f3f4f6',
                   color: '#333',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-              >
-                <Plus size={20} />
-                Create New Assessment
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('assessments')}
-                style={{
-                  background: '#e3f2fd',
-                  border: '1px solid #2196f3',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '8px',
-                  padding: '16px',
                   cursor: 'pointer',
-                  color: '#1976d2',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s ease'
+                  fontSize: '14px',
+                  fontWeight: '500'
                 }}
-                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
               >
-                <FileText size={20} />
-                Manage Assessments
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('users')}
-                style={{
-                  background: '#e8f5e8',
-                  border: '1px solid #4caf50',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  cursor: 'pointer',
-                  color: '#2e7d32',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-              >
-                <Users size={20} />
-                View Users
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('activity')}
-                style={{
-                  background: '#fff3e0',
-                  border: '1px solid #ff9800',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  cursor: 'pointer',
-                  color: '#f57c00',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-              >
-                <BarChart3 size={20} />
-                View Activity
-              </button>
-              
-              <button
-                onClick={() => setShowMigration(true)}
-                style={{
-                  background: '#f3e5f5',
-                  border: '1px solid #9c27b0',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  cursor: 'pointer',
-                  color: '#7b1fa2',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-              >
-                <Database size={20} />
-                Migrate Assessments
+                <Settings size={18} />
+                Manage Questions
               </button>
             </div>
           </div>
@@ -584,401 +509,331 @@ const Admin = () => {
 
       {/* Users Tab */}
       {activeTab === 'users' && (
-        <div className="card">
-          <h2 style={{ marginBottom: '24px' }}>Recent Users</h2>
-          <div style={{ overflow: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e0e0e0' }}>
-                  <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>Name</th>
-                  <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>Email</th>
-                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(user => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                    <td style={{ padding: '12px' }}>
-                      {user.full_name || 'N/A'}
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      {user.email}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      {formatDate(user.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* All Assessments Tab */}
-      {activeTab === 'assessments' && (
-        <div className="card">
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '24px'
-          }}>
-            <h2 style={{ margin: 0 }}>All Custom Assessments</h2>
-            
-            {/* Debug Info */}
-            <div style={{
-              background: '#f0f7ff',
-              border: '1px solid #2196f3',
-              borderRadius: '8px',
-              padding: '12px',
-              margin: '16px 0',
-              fontSize: '14px'
-            }}>
-              <strong>Debug:</strong> Loading: {loading ? 'Yes' : 'No'} | 
-              Error: {error || 'None'} | 
-              Assessments: {publicAssessments?.length || 0} | 
-              User: {user?.email || 'Not logged in'}
-              <button
-                onClick={() => {
-                  console.log('State:', { loading, error, publicAssessments, user })
-                  loadPublicAssessments()
-                }}
-                style={{
-                  background: '#2196f3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  cursor: 'pointer',
-                  marginLeft: '8px'
-                }}
-              >
-                Reload
-              </button>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {/* Migration Button */}
-              <button
-                onClick={() => setShowMigration(true)}
-                style={{
-                  background: '#e3f2fd',
-                  border: '1px solid #2196f3',
-                  borderRadius: '6px',
-                  padding: '10px 16px',
-                  cursor: 'pointer',
-                  color: '#1976d2',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Upload size={16} />
-                Migrate from localStorage
-              </button>
-
-              {/* Create Assessment Button */}
-              <button
-                onClick={handleCreateAssessment}
-                style={{
-                  background: '#f6d55c',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '10px 16px',
-                  cursor: 'pointer',
-                  color: '#333',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Plus size={16} />
-                Create Assessment
-              </button>
-
-              {/* Bulk Actions */}
-              {selectedAssessments.size > 0 && (
-                <>
-                  <button
-                    onClick={handleBulkMakePublic}
-                    style={{
-                      background: '#e8f5e8',
-                      border: '1px solid #4caf50',
-                      borderRadius: '6px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      color: '#137333',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <Eye size={14} />
-                    Make Public ({selectedAssessments.size})
-                  </button>
-                  <button
-                    onClick={handleBulkMakePrivate}
-                    style={{
-                      background: '#fff3cd',
-                      border: '1px solid #ffc107',
-                      borderRadius: '6px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      color: '#856404',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <EyeOff size={14} />
-                    Make Private ({selectedAssessments.size})
-                  </button>
-                  <button
-                    onClick={handleBulkDelete}
-                    style={{
-                      background: '#fce8e6',
-                      border: '1px solid #f44336',
-                      borderRadius: '6px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      color: '#d93025',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <Trash2 size={14} />
-                    Delete ({selectedAssessments.size})
-                  </button>
-                </>
-              )}
-            </div>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden'
+        }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+              Registered Users ({users.length})
+            </h3>
           </div>
           
-          <div style={{ overflow: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e0e0e0' }}>
-                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600', width: '50px' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedAssessments.size === publicAssessments.length && publicAssessments.length > 0}
-                      onChange={(e) => handleSelectAllAssessments(e.target.checked)}
-                      style={{ transform: 'scale(1.2)' }}
-                    />
-                  </th>
-                  <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>Assessment</th>
-                  <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>Creator</th>
-                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Status</th>
-                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Created</th>
-                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {publicAssessments.map(assessment => (
-                  <tr key={assessment.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedAssessments.has(assessment.id)}
-                        onChange={(e) => handleSelectAssessment(assessment.id, e.target.checked)}
-                        style={{ transform: 'scale(1.2)' }}
-                      />
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <div>
-                        <div style={{ fontWeight: '500' }}>{assessment.name}</div>
-                        {assessment.description && (
-                          <div style={{ fontSize: '12px', color: '#666' }}>
-                            {assessment.description}
+          {users.length === 0 ? (
+            <div style={{ padding: '48px', textAlign: 'center', color: '#666' }}>
+              <Users size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+              <p>No users found or you don't have permission to view users.</p>
+              <p style={{ fontSize: '13px', color: '#888' }}>
+                Note: Row Level Security may restrict access to other users' profiles.
+              </p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f9fafb' }}>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>User</th>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Email</th>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            background: '#667eea',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                          }}>
+                            {(u.full_name || u.email || '?')[0].toUpperCase()}
                           </div>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <div>
-                        <div>{assessment.profiles?.full_name || 'N/A'}</div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
+                          <div>
+                            <div style={{ fontWeight: '500' }}>{u.full_name || 'No name'}</div>
+                            {u.id === user?.id && (
+                              <span style={{
+                                fontSize: '11px',
+                                background: '#dcfce7',
+                                color: '#166534',
+                                padding: '2px 6px',
+                                borderRadius: '4px'
+                              }}>
+                                You
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#666' }}>{u.email}</td>
+                      <td style={{ padding: '12px 16px', color: '#666' }}>{formatDate(u.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Assessments Tab */}
+      {activeTab === 'assessments' && (
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            padding: '20px', 
+            borderBottom: '1px solid #e5e7eb',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+              All Assessments ({assessments.length})
+            </h3>
+            <button
+              onClick={() => setShowCreateAssessment(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                background: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              <Plus size={16} />
+              New Assessment
+            </button>
+          </div>
+          
+          {assessments.length === 0 ? (
+            <div style={{ padding: '48px', textAlign: 'center', color: '#666' }}>
+              <FileText size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+              <p>No assessments found.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f9fafb' }}>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Assessment</th>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Owner</th>
+                    <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Visibility</th>
+                    <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Created</th>
+                    <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assessments.map(assessment => (
+                    <tr key={assessment.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            background: assessment.color || '#667eea',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <FileText size={20} color="white" />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: '500' }}>{assessment.name}</div>
+                            {assessment.description && (
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                {assessment.description.substring(0, 50)}{assessment.description.length > 50 ? '...' : ''}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ fontSize: '14px' }}>
+                          {assessment.profiles?.full_name || assessment.profiles?.email || 'Unknown'}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#888' }}>
                           {assessment.profiles?.email}
                         </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        background: assessment.is_public ? '#e8f5e8' : '#fff3cd',
-                        color: assessment.is_public ? '#137333' : '#856404'
-                      }}>
-                        {assessment.is_public ? '🌐 PUBLIC' : '🔒 PRIVATE'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      {formatDate(assessment.created_at)}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                        <button
-                          onClick={() => handleEditAssessment(assessment)}
-                          style={{
-                            background: '#e3f2fd',
-                            border: '1px solid #2196f3',
-                            borderRadius: '4px',
-                            padding: '6px 10px',
-                            cursor: 'pointer',
-                            color: '#1976d2',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                          title="Edit Assessment"
-                        >
-                          <Edit2 size={12} />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => toggleAssessmentVisibility(assessment.id, assessment.is_public)}
-                          style={{
-                            background: assessment.is_public ? '#fff3cd' : '#e8f5e8',
-                            border: `1px solid ${assessment.is_public ? '#ffc107' : '#4caf50'}`,
-                            borderRadius: '4px',
-                            padding: '6px 10px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            color: assessment.is_public ? '#856404' : '#137333'
-                          }}
-                          title={assessment.is_public ? 'Make Private' : 'Make Public'}
-                        >
-                          {assessment.is_public ? (
-                            <>
-                              <EyeOff size={12} />
-                              Private
-                            </>
-                          ) : (
-                            <>
-                              <Eye size={12} />
-                              Public
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => deleteAssessment(assessment.id, assessment.name)}
-                          style={{
-                            background: '#fce8e6',
-                            border: '1px solid #f44336',
-                            borderRadius: '4px',
-                            padding: '6px 10px',
-                            cursor: 'pointer',
-                            color: '#f44336',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                          title="Delete Assessment"
-                        >
-                          <Trash2 size={12} />
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Migration Tab */}
-      {activeTab === 'migration' && (
-        <div className="card">
-          <h2 style={{ marginBottom: '24px' }}>Migrate Data from localStorage to Database</h2>
-          <div style={{ 
-            background: '#fff3cd', 
-            padding: '16px', 
-            borderRadius: '8px',
-            marginBottom: '24px',
-            border: '1px solid #ffc107'
-          }}>
-            <h4 style={{ color: '#856404', marginBottom: '8px' }}>⚠️ Important:</h4>
-            <p style={{ color: '#856404', margin: 0 }}>
-              This tool migrates assessment types and questions from browser localStorage to the database. 
-              Use this if your assessments show in the UI but don't work when clicked.
-            </p>
-          </div>
-          <MigrateAssessments />
-        </div>
-      )}
-
-      {/* Recent Activity Tab */}
-      {activeTab === 'activity' && (
-        <div className="card">
-          <h2 style={{ marginBottom: '24px' }}>Recent Assessment Activity</h2>
-          <div style={{ overflow: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e0e0e0' }}>
-                  <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>User</th>
-                  <th style={{ textAlign: 'left', padding: '12px', fontWeight: '600' }}>Assessment</th>
-                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Score</th>
-                  <th style={{ textAlign: 'center', padding: '12px', fontWeight: '600' }}>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentActivity.map(activity => (
-                  <tr key={activity.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                    <td style={{ padding: '12px' }}>
-                      <div>
-                        <div>{activity.profiles?.full_name || 'N/A'}</div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                          {activity.profiles?.email}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                        <span style={{
+                          padding: '4px 10px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          background: assessment.is_public ? '#dcfce7' : '#fef3c7',
+                          color: assessment.is_public ? '#166534' : '#92400e'
+                        }}>
+                          {assessment.is_public ? '🌐 Public' : '🔒 Private'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', color: '#666' }}>
+                        {formatDate(assessment.created_at)}
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => setEditingAssessment(assessment)}
+                            style={{
+                              padding: '6px 12px',
+                              background: '#e0f2fe',
+                              color: '#0277bd',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <Edit2 size={12} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => toggleAssessmentVisibility(assessment)}
+                            style={{
+                              padding: '6px 12px',
+                              background: assessment.is_public ? '#fef3c7' : '#dcfce7',
+                              color: assessment.is_public ? '#92400e' : '#166534',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            {assessment.is_public ? <EyeOff size={12} /> : <Eye size={12} />}
+                            {assessment.is_public ? 'Private' : 'Public'}
+                          </button>
+                          <button
+                            onClick={() => deleteAssessment(assessment)}
+                            style={{
+                              padding: '6px 12px',
+                              background: '#fef2f2',
+                              color: '#dc2626',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <Trash2 size={12} />
+                            Delete
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      {activity.assessment_type.replace('-', ' ')}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span style={{ 
-                        color: (activity.score / activity.total_questions) >= 0.8 ? '#4caf50' : 
-                               (activity.score / activity.total_questions) >= 0.6 ? '#ff9800' : '#f44336'
-                      }}>
-                        {activity.score}/{activity.total_questions} ({Math.round((activity.score / activity.total_questions) * 100)}%)
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      {formatDate(activity.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Create Assessment Modal */}
+      {/* Activity Tab */}
+      {activeTab === 'activity' && (
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden'
+        }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+              Recent Assessment Results ({recentResults.length})
+            </h3>
+          </div>
+          
+          {recentResults.length === 0 ? (
+            <div style={{ padding: '48px', textAlign: 'center', color: '#666' }}>
+              <BarChart3 size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+              <p>No assessment results found.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f9fafb' }}>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>User</th>
+                    <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Assessment</th>
+                    <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Score</th>
+                    <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: '600', fontSize: '13px', color: '#666' }}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentResults.map(result => {
+                    const percentage = result.total_questions > 0 
+                      ? Math.round((result.score / result.total_questions) * 100) 
+                      : 0
+                    return (
+                      <tr key={result.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ fontWeight: '500' }}>
+                            {result.profiles?.full_name || result.profiles?.email || 'Anonymous'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#888' }}>
+                            {result.profiles?.email}
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {result.assessment_type}
+                        </td>
+                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            background: percentage >= 80 ? '#dcfce7' : percentage >= 60 ? '#fef3c7' : '#fef2f2',
+                            color: percentage >= 80 ? '#166534' : percentage >= 60 ? '#92400e' : '#dc2626'
+                          }}>
+                            {result.score}/{result.total_questions} ({percentage}%)
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', color: '#666' }}>
+                          {formatDate(result.created_at)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modals */}
       {showCreateAssessment && (
         <CreateAssessmentType
           onAssessmentCreated={handleAssessmentCreated}
@@ -986,20 +841,11 @@ const Admin = () => {
         />
       )}
 
-      {/* Edit Assessment Modal */}
       {editingAssessment && (
         <EditAssessmentType
           assessment={editingAssessment}
           onAssessmentUpdated={handleAssessmentUpdated}
           onClose={() => setEditingAssessment(null)}
-        />
-      )}
-
-      {/* Migration Modal */}
-      {showMigration && (
-        <MigrateAssessments
-          onClose={() => setShowMigration(false)}
-          onMigrationComplete={handleMigrationComplete}
         />
       )}
     </div>
